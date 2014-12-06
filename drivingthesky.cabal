@@ -16,16 +16,33 @@ build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
 
-executable skydriver
-  main-is:             src/Main.hs
-  -- other-modules:       
+data-files:          levels/*.lvl
+                     levels/*.png
+
+executable drivingthesky
+  main-is:             Main.hs
+  other-modules:       Paths_drivingthesky
+                     , Audio
+                     , Entity
+                     , Level
+                     , Game
+                     , Input
+                     , Menu
+                     , Resource
+                     , Render
+                       Util
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7
                      , Yampa
-                     , vector-space
-                     , GLUT
-                     , OpenGl
+                     , OpenGL
+                     , GLUtil
+                     , SDL
+                     , SDL-image
+                     , SDL-ttf
+                     , SDL-mixer
                      , containers
+                     , directory
+                     , filepath
 
   hs-source-dirs:      src/
   default-language:    Haskell2010
