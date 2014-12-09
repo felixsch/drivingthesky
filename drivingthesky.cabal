@@ -23,7 +23,7 @@ executable drivingthesky
   main-is:             Main.hs
   other-modules:       Paths_drivingthesky
                      , Audio
-                     , Entity
+                     , State
                      , Level
                      , Game
                      , Input

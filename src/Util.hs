@@ -1,5 +1,8 @@
-module Util where
+module Util
+  ( whenM
+  ) where
 
-import Control.Exception (try)
-import Control.Applicative
+import Data.Maybe
 
+whenM :: (Monad m) => m (Maybe a) -> (a -> m ()) -> m ()
+whenM s f = maybe (return ()) f =<< s
