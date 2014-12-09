@@ -25,14 +25,12 @@ import System.IO.Error (catchIOError)
 import Data.Maybe 
 import qualified Data.Map as M
 
-import Graphics.UI.SDL (Surface)
-import Graphics.UI.SDL.Image (load)
-
 import Graphics.UI.SDL.Mixer (Music)
 import Graphics.UI.SDL.Mixer.Music (loadMUS)
 
 import Graphics.UI.SDL.TTF
 
+import Texture
 import Level
 
 
@@ -40,6 +38,8 @@ type LoadError = String
 
 class Load a where
     loadR :: (MonadIO m) => String -> FilePath -> m (Either LoadError (Resource a))
+    finalizeR :: (MonadIO m) => Resource a -> m ()
+    finalizeR _ = return ()
 
 
 
@@ -58,12 +58,12 @@ loadResource r@(Resource name path _) = if isLoaded r
                                             then return $ Right r
                                             else loadR name path
 
-type Image = Surface
 
-instance Load Image where
+instance Load Tex where
     loadR name path = liftIO $
-      catchIOError (Right . Resource name path . Just <$> load path)
+      catchIOError (Right . Resource name path . Just <$> loadTexture path)
                    (\e -> return (Left $ show e))
+    finalizeR = liftIO . maybe (return ()) freeTexture . res
 
 instance Load Music where
     loadR name path = liftIO $
@@ -84,15 +84,17 @@ instance Load Level where
 
 
 data ResourceMgr = ResourceMgr { levels :: M.Map String (Resource Level)
-                                       , images :: M.Map String (Resource Image)
+                                       , textures :: M.Map String (Resource Tex)
                                        , musics :: M.Map String (Resource Music)
                                        , fonts  :: M.Map String (Resource Font) }
 
 mkResourceMgr :: ResourceMgr
 mkResourceMgr = ResourceMgr M.empty M.empty M.empty M.empty
 
+
+
 resMgrLoadAll :: ResourceMgr -> IO (ResourceMgr, [LoadError])
-resMgrLoadAll mgr = loadAll images =<< loadAll levels =<< loadAll musics =<< loadAll fonts (mgr, [])
+resMgrLoadAll mgr = loadAll textures =<< loadAll levels =<< loadAll musics =<< loadAll fonts (mgr, [])
   where
     loadAll f (mgr', err) = foldM (\(m, errors) r -> 
         if isLoaded r
@@ -104,18 +106,27 @@ resMgrLoadAll mgr = loadAll images =<< loadAll levels =<< loadAll musics =<< loa
                     Right lr -> return (addR m lr, errors)
         ) (mgr', err) (M.elems $ f mgr')
 
+resMgrUnload :: [String] -> ResourceMgr -> IO ResourceMgr
+resMgrUnload names mgr = foldM (\mgr' -> 
+  case getResource name mgr' of
+   
+
+
 class (Load a) => Manage a where
     addR :: ResourceMgr -> Resource a -> ResourceMgr
+    getResource :: String -> ResourceMgr -> Maybe (Resource a)
+
     getR :: String -> ResourceMgr -> IO (Maybe a)
+    getR name mgr = 
 
 
 instance Manage Level where
     addR mgr r = mgr { levels = M.insert (resName r) r (levels mgr)}
     getR = basicGet levels
 
-instance Manage Image where
-    addR mgr r = mgr { images = M.insert (resName r) r (images mgr)}
-    getR = basicGet images
+instance Manage Tex where
+    addR mgr r = mgr { textures = M.insert (resName r) r (textures mgr)}
+    getR = basicGet textures
 
 instance Manage Music where
     addR mgr r = mgr { musics = M.insert (resName r) r (musics mgr)}
@@ -126,15 +137,8 @@ instance Manage Font where
     getR = basicGet fonts
  
 
-basicGet :: (Manage a) => (ResourceMgr -> M.Map String (Resource a)) -> String -> ResourceMgr -> IO (Maybe a)
-basicGet f name mgr = case M.lookup name (f mgr) of
-                           Nothing -> return Nothing
-                           Just r  -> if isLoaded r
-                                         then return $ res r
-                                         else fromEither <$> loadResource r
-    where
-        fromEither (Left _)  = Nothing
-        fromEither (Right r) = res r
+basicGet :: (Manage a) => (ResourceMgr -> M.Map String (Resource a)) -> String -> ResourceMgr -> Maybe (Resource a)
+basicGet f name mgr = M.lookup name (f mgr)
 
 
 

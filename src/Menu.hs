@@ -4,6 +4,7 @@ module Menu
 
 import Control.Monad
 
+import Texture
 import Resource
 import Input
 import State

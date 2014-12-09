@@ -30,12 +30,12 @@ executable drivingthesky
                      , Menu
                      , Resource
                      , Render
+                     , Texture
                        Util
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7
                      , Yampa
                      , OpenGL
-                     , GLUtil
                      , SDL
                      , SDL-image
                      , SDL-ttf
