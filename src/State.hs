@@ -14,16 +14,12 @@ data GameStatus = GameMainMenu
 
 
 data GameState = GameState { gameStatus :: GameStatus
-                           , gameHeight :: Int
-                           , gameWidth  :: Int
                            }
 
 
 initialGameState :: GameState
 initialGameState = GameState 
   { gameStatus = GameMainMenu
-  , gameWidth = 1366
-  , gameHeight = 786
   }
 
 

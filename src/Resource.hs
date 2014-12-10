@@ -3,16 +3,17 @@
 
 module Resource
   ( LoadError
-  , Image
   , Load(..)
   , Resource(..)
   , mkResource
   , isLoaded
   , loadResource
-  , ResourceMgr(..)
-  , mkResourceMgr
+  , Resources(..)
+  , mkResources
   , resMgrLoadAll
   , Manage(..)
+  , initResources
+  , updateResources
   ) where
 
 import Control.Monad
@@ -22,6 +23,7 @@ import Control.Applicative
 
 import System.IO.Error (catchIOError)
 
+import Data.IORef
 import Data.Maybe 
 import qualified Data.Map as M
 
@@ -30,8 +32,10 @@ import Graphics.UI.SDL.Mixer.Music (loadMUS)
 
 import Graphics.UI.SDL.TTF
 
+import Paths_drivingthesky
 import Texture
 import Level
+import State
 
 
 type LoadError = String
@@ -83,17 +87,17 @@ instance Load Level where
 
 
 
-data ResourceMgr = ResourceMgr { levels :: M.Map String (Resource Level)
+data Resources = Resources { levels :: M.Map String (Resource Level)
                                        , textures :: M.Map String (Resource Tex)
                                        , musics :: M.Map String (Resource Music)
                                        , fonts  :: M.Map String (Resource Font) }
 
-mkResourceMgr :: ResourceMgr
-mkResourceMgr = ResourceMgr M.empty M.empty M.empty M.empty
+mkResources :: Resources
+mkResources = Resources M.empty M.empty M.empty M.empty
 
 
 
-resMgrLoadAll :: ResourceMgr -> IO (ResourceMgr, [LoadError])
+resMgrLoadAll :: Resources -> IO (Resources, [LoadError])
 resMgrLoadAll mgr = loadAll textures =<< loadAll levels =<< loadAll musics =<< loadAll fonts (mgr, [])
   where
     loadAll f (mgr', err) = foldM (\(m, errors) r -> 
@@ -106,19 +110,12 @@ resMgrLoadAll mgr = loadAll textures =<< loadAll levels =<< loadAll musics =<< l
                     Right lr -> return (addR m lr, errors)
         ) (mgr', err) (M.elems $ f mgr')
 
-resMgrUnload :: [String] -> ResourceMgr -> IO ResourceMgr
-resMgrUnload names mgr = foldM (\mgr' -> 
-  case getResource name mgr' of
-   
 
 
 class (Load a) => Manage a where
-    addR :: ResourceMgr -> Resource a -> ResourceMgr
-    getResource :: String -> ResourceMgr -> Maybe (Resource a)
-
-    getR :: String -> ResourceMgr -> IO (Maybe a)
-    getR name mgr = 
-
+    addR :: Resources -> Resource a -> Resources
+    getR :: Resources -> String -> IO (Maybe a)
+    
 
 instance Manage Level where
     addR mgr r = mgr { levels = M.insert (resName r) r (levels mgr)}
@@ -137,8 +134,20 @@ instance Manage Font where
     getR = basicGet fonts
  
 
-basicGet :: (Manage a) => (ResourceMgr -> M.Map String (Resource a)) -> String -> ResourceMgr -> Maybe (Resource a)
-basicGet f name mgr = M.lookup name (f mgr)
+basicGet :: (Manage a) => (Resources -> M.Map String (Resource a)) -> Resources -> String -> IO (Maybe a)
+basicGet f mgr name = case M.lookup name (f mgr) of
+                           Nothing -> return Nothing
+                           Just r  -> if isLoaded r
+                                         then return $ res r
+                                         else fromEither <$> loadResource r
+    where
+        fromEither (Left _)  = Nothing
+        fromEither (Right r) = res r
 
 
+initResources :: IO (IORef Resources)
+initResources = undefined
+
+updateResources :: IORef Resources -> GameState -> IO Resources
+updateResources ref st = readIORef ref
 

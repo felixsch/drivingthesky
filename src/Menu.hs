@@ -1,5 +1,6 @@
 module Menu
   ( Menu(..)
+  , renderMenu
   ) where
 
 import Control.Monad
@@ -18,14 +19,14 @@ data Menu = Menu { title   :: String
                  ,  pos     :: Int }
 
 
-renderMenu :: ResourceMgr -> GameState -> IO ()
-renderMenu mgr st = do
-    scr <- getVideoSurface
-    
-    whenM (getR "bg" mgr) $ \bg -> do
-      let bgRect = Rect 0 0 (gameWidth st) (gameHeight st)
-      r <- blitSurface bg Nothing scr $ Just bgRect
-      when (not r) $ putStrLn "Could not draw menu background"
+renderMenu :: GameState -> Resources -> IO ()
+renderMenu st mgr = do
+    whenM (getR mgr "bg") $ \tex ->
+       renderTexture tex (0.0,0.0) (w,h) 1.0
+
+ where
+     w = toR $ gameWidth
+     h = toR $ gameHeight
 
 
 

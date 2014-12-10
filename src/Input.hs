@@ -1,8 +1,11 @@
 module Input 
   ( Input(..)
   , noInput
-  , input
+  , initInput
+  , updateInput
   ) where
+
+import Data.IORef
 
 import Graphics.UI.SDL
 
@@ -15,14 +18,19 @@ data Input = Input { jump  :: Bool
 noInput :: Input 
 noInput = Input False False False False
 
-input :: IO Input
-input = loop noInput
+initInput :: IO (IORef Input)
+initInput = newIORef noInput
+
+updateInput :: IORef Input -> IO Input
+updateInput ref = loop noInput
   where
     loop i = do
         ev <- pollEvent
         if isEvent ev
           then loop $ handleEv i ev
-          else return i
+          else do
+              atomicWriteIORef ref i
+              return i
 
 isEvent :: Event -> Bool
 isEvent NoEvent = False
