@@ -18,6 +18,7 @@ cabal-version:       >=1.10
 
 data-files:          levels/*.lvl
                      levels/*.png
+                     data/*.png
 
 executable drivingthesky
   main-is:             Main.hs

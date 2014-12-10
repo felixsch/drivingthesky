@@ -10,17 +10,15 @@ module Resource
   , loadResource
   , Resources(..)
   , mkResources
-  , resMgrLoadAll
   , Manage(..)
   , initResources
-  , updateResources
   ) where
 
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Applicative
 
-
+import System.FilePath.Posix
 import System.IO.Error (catchIOError)
 
 import Data.IORef
@@ -35,7 +33,6 @@ import Graphics.UI.SDL.TTF
 import Paths_drivingthesky
 import Texture
 import Level
-import State
 
 
 type LoadError = String
@@ -97,8 +94,8 @@ mkResources = Resources M.empty M.empty M.empty M.empty
 
 
 
-resMgrLoadAll :: Resources -> IO (Resources, [LoadError])
-resMgrLoadAll mgr = loadAll textures =<< loadAll levels =<< loadAll musics =<< loadAll fonts (mgr, [])
+resManagerLoadAll :: Resources -> IO (Resources, [LoadError])
+resManagerLoadAll mgr = loadAll textures =<< loadAll levels =<< loadAll musics =<< loadAll fonts (mgr, [])
   where
     loadAll f (mgr', err) = foldM (\(m, errors) r -> 
         if isLoaded r
@@ -146,8 +143,26 @@ basicGet f mgr name = case M.lookup name (f mgr) of
 
 
 initResources :: IO (IORef Resources)
-initResources = undefined
+initResources = do
+    path <- getDataDir
+    (res, errors) <- resManagerLoadAll $ basicResources path
+    unless (null errors) $ error (unlines errors)
+    newIORef res
+  where
+      basicResources path = Resources
+        { textures = M.fromList 
+          [ "logo" +> (path </> "data/logo.png")
+          , "bg"   +> (path </> "data/bg.png")
+          , "play" +> (path </> "data/play.png")
+          , "quit" +> (path </> "data/quit.png")
+          ]
+        , levels = M.fromList 
+          [ "1" +> (path </> "levels/basic.lvl")
+          ]
+        , musics = M.empty
+        , fonts  = M.empty
+        }
 
-updateResources :: IORef Resources -> GameState -> IO Resources
-updateResources ref st = readIORef ref
-
+(+>) :: (Load a) => String -> FilePath -> (String, Resource a)
+(+>) name path = (name, mkResource name path)
+    

@@ -52,8 +52,10 @@ initWindow = do
 
 
 render :: GameStatus -> GameState -> Resources -> IO Bool
-render (GameMainMenu) st mgr = renderMenu st mgr >> return False
+render (GameMainMenu) st mgr = begin >> renderMenu st mgr  >> end >> return False
 
+updateResources :: IORef Resources -> GameState -> IO Resources
+updateResources ref st = readIORef ref
 
 
 initTime :: IO (IORef Double)

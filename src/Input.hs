@@ -19,7 +19,7 @@ noInput :: Input
 noInput = Input False False False False
 
 initInput :: IO (IORef Input)
-initInput = newIORef noInput
+initInput = newIORef $ Input False False False True
 
 updateInput :: IORef Input -> IO Input
 updateInput ref = loop noInput
