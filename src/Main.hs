@@ -16,17 +16,16 @@ import Menu
 import State
 import Util
 
-
+import Paths_drivingthesky
 
 
 initGL :: IO ()
 initGL = do
-    clearColor $= Color4 (0 :: GLfloat) 0 0 0
-    --matrixMode $= Projection
-    --loadIdentity
-    --ortho 0 (fromIntegral gameWidth) (fromIntegral gameHeight) 0 (-1) 1
-    --matrixMode $= Modelview 0
-    --loadIdentity
+    matrixMode $= Projection
+    loadIdentity
+    ortho 0 (fromIntegral gameWidth) (fromIntegral gameHeight) 0 (-1) 0
+    matrixMode $= Modelview 0
+    loadIdentity
 
 initDisplay :: IO ()
 initDisplay = do
@@ -52,7 +51,8 @@ initWindow = do
 
 
 render :: GameStatus -> GameState -> Resources -> IO Bool
-render (GameMainMenu) st mgr = begin 
+render (GameMainMenu) st mgr = 
+                             begin 
                              >> renderMenu st mgr
                              >> cube 0.2
 
@@ -87,8 +87,8 @@ cube w = do
     vertex $ Vertex3 (-w) w (-w)
                             
 
-updateResources :: IORef Resources -> GameState -> IO Resources
-updateResources ref st = readIORef ref
+updateResources :: Resources -> GameState -> IO Resources
+updateResources res st = return res
 
 
 initTime :: IO (IORef Double)
@@ -107,9 +107,10 @@ updateTime ref = do
 main :: IO ()
 main = do
 
+    path  <- getDataDir
     time  <- initTime
     input <- initInput
-    res   <- initResources
+    res   <- initResources path
 
     reactimate (initWindow  >> updateInput input)
                (\_ -> (,) <$> updateTime time <*> (Just <$> updateInput input))

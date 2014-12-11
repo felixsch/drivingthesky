@@ -17,13 +17,11 @@ data Menu = Menu { title   :: String
                  ,  entries :: [(String, (GameState -> GameState))] }
 
 
-
 renderMenu :: GameState -> Resources -> IO ()
 renderMenu st mgr = do
-    whenM (getR mgr "bg") $ \tex -> do
-       renderTexture tex (0.0,0.0) (w,h) 1.0
+    withTexture mgr "bg" $ \tex -> do
+       renderTexture tex (0.0,0.0) (w,h) 0.5
        putStrLn "Drawing bg..."
-
  where
      w = toR $ gameWidth
      h = toR $ gameHeight

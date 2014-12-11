@@ -54,10 +54,12 @@ renderTexture tex (x,y) (w,h) alpha = liftIO $ do
 
   renderPrimitive Quads $ do
     tC2 (TexCoord2 0 1) >> v3 (Vertex3 x y 0.0) >> color'
-    tC2 (TexCoord2 0 0) >> v3 (Vertex3 x (y + h) 0.0) >> color'
-    tC2 (TexCoord2 1 0) >> v3 (Vertex3 (x + w) (y + h) 0.0) >> color'
-    tC2 (TexCoord2 1 1) >> v3 (Vertex3 (x + w) y 0.0) >> color'
+    tC2 (TexCoord2 0 0) >> v3 (Vertex3 x (y + h') 0.0) >> color'
+    tC2 (TexCoord2 1 0) >> v3 (Vertex3 (x + w') (y + h') 0.0) >> color'
+    tC2 (TexCoord2 1 1) >> v3 (Vertex3 (x + w') y 0.0) >> color'
   texture Texture2D $= Disabled
 
   where
     color' = c4 (Color4 1.0 1.0 1.0 alpha)
+    w'     = texWidth tex
+    h'     = texHeight tex
