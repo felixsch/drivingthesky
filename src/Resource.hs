@@ -35,11 +35,89 @@ import Texture
 import Level
 
 
+
+
+data Resource = TextureR { resName :: String
+                         , resPath :: FilePath
+                         , resTexture     :: (Maybe Tex) }
+              | LevelR { resName :: String
+                       , resPath :: FilePath
+                       , resLevel     :: (Maybe Level) }
+              | MusicR { resName :: String
+                       , resPath :: FilePath
+                       , resMusic     :: (Maybe Music) }
+              | FontR { resName :: String
+                      , resPath :: FilePath
+                      , resFont     :: (Maybe Font) } 
+
+instance Show Resource where
+  show (TextureR name path _) = name ++ " (texture:" ++ path ++ ")"
+  show (LevelR name path _) = name ++ " (level:" ++ path ++ ")"
+  show (MusicR name path _) = name ++ " (music:" ++ path ++ ")"
+  show (FontR name path _) = name ++ " (font:" ++ path ++ ")"
+
+
+isTextureR :: Resource -> Bool
+isTextureR (TextureR _ _ _) = True
+isTextureR _                = False
+
+isLevelR :: Resource -> Bool
+isLevelR (LevelR _ _ _) = True
+isLevelR _                = False
+
+isMusicR :: Resource -> Bool
+isMusicR (MusicR _ _ _) = True
+isMusicR _                = False
+
+isFontR :: Resource -> Bool
+isFontR (FontR _ _ _) = True
+isFontR _                = False
+
+loadResource :: Resource -> IO Resource
+loadResource tex@(TextureR name path mTex)
+  | isJust mTex   = return tex
+  | otherwise     = TextureR name path . Just <$> loadTexture path
+loadResource level@(LevelR name path mLevel)
+  | isJust mLevel = return level
+  | otherwise     = LevelR name path . Just <$> loadLevel path
+loadResource music@(MusicR name path mMusic)
+  | isJust mMusic = return music
+  | otherwise     = MusicR name path . Just <$> loadMUS path
+loadResource font@(FontR name path mFont)
+  | isJust mFont  = return font
+  | otherwise     = FontR name path . Just <$> openFont path 32
+
+data Resources = Resources (IORef (M.Map String Resource))
+
+addResources :: Resources -> [Resource] -> IO ()
+addResources (Resources ref) resources = do
+    res    <- readIORef ref
+    newRes <- foldM (\res' r -> do
+                        add <- loadResource r
+                        return $ M.insert (resName add) add
+                    ) res resources
+    atomicWriteIORef ref newRes
+     
+      
+  
+
+
+--getTexture :: Resources -> String -> IO (Maybe Tex)
+
+
+
+  
+
+
+
+
+
+{-
 type LoadError = String
 
 class Load a where
     loadR :: (MonadIO m) => String -> FilePath -> m (Either LoadError (Resource a))
-    finalizeR :: (MonadIO m) => Resource a -> m ()
+    finalizeR :: (MonadIO m) => Resource a -> m ()jn
     finalizeR _ = return ()
 
 
@@ -165,4 +243,4 @@ initResources = do
 
 (+>) :: (Load a) => String -> FilePath -> (String, Resource a)
 (+>) name path = (name, mkResource name path)
-    
+-}    

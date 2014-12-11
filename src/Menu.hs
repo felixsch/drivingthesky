@@ -20,8 +20,9 @@ data Menu = Menu { title   :: String
 
 renderMenu :: GameState -> Resources -> IO ()
 renderMenu st mgr = do
-    whenM (getR mgr "bg") $ \tex ->
+    whenM (getR mgr "bg") $ \tex -> do
        renderTexture tex (0.0,0.0) (w,h) 1.0
+       putStrLn "Drawing bg..."
 
  where
      w = toR $ gameWidth

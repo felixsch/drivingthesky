@@ -22,11 +22,11 @@ import Util
 initGL :: IO ()
 initGL = do
     clearColor $= Color4 (0 :: GLfloat) 0 0 0
-    matrixMode $= Projection
-    loadIdentity
-    ortho 0 (fromIntegral gameWidth) (fromIntegral gameHeight) 0 (-1) 1
-    matrixMode $= Modelview 0
-    loadIdentity
+    --matrixMode $= Projection
+    --loadIdentity
+    --ortho 0 (fromIntegral gameWidth) (fromIntegral gameHeight) 0 (-1) 1
+    --matrixMode $= Modelview 0
+    --loadIdentity
 
 initDisplay :: IO ()
 initDisplay = do
@@ -52,7 +52,40 @@ initWindow = do
 
 
 render :: GameStatus -> GameState -> Resources -> IO Bool
-render (GameMainMenu) st mgr = begin >> renderMenu st mgr  >> end >> return False
+render (GameMainMenu) st mgr = begin 
+                             >> renderMenu st mgr
+                             >> cube 0.2
+
+                             >> end
+                             >> return False
+cube :: GLfloat -> IO ()
+cube w = do
+  renderPrimitive Quads $ do
+    vertex $ Vertex3 w w w
+    vertex $ Vertex3 w w (-w)
+    vertex $ Vertex3 w (-w) (-w)
+    vertex $ Vertex3 w (-w) w
+    vertex $ Vertex3 w w w
+    vertex $ Vertex3 w w (-w)
+    vertex $ Vertex3 (-w) w (-w)
+    vertex $ Vertex3 (-w) w w
+    vertex $ Vertex3 w w w
+    vertex $ Vertex3 w (-w) w
+    vertex $ Vertex3 (-w) (-w) w
+    vertex $ Vertex3 (-w) w w
+    vertex $ Vertex3 (-w) w w
+    vertex $ Vertex3 (-w) w (-w)
+    vertex $ Vertex3 (-w) (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) w
+    vertex $ Vertex3 w (-w) w
+    vertex $ Vertex3 w (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) w
+    vertex $ Vertex3 w w (-w)
+    vertex $ Vertex3 w (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) (-w)
+    vertex $ Vertex3 (-w) w (-w)
+                            
 
 updateResources :: IORef Resources -> GameState -> IO Resources
 updateResources ref st = readIORef ref
