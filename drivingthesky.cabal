@@ -19,33 +19,35 @@ cabal-version:       >=1.10
 data-files:          levels/*.lvl
                      levels/*.png
                      data/*.png
+                     data/shader/*.vert
+                     data/shader/*.frag
 
 executable drivingthesky
   main-is:             Main.hs
   other-modules:       Paths_drivingthesky
+                     , FRP.Yampa.GLFW
                      , Audio
                      , State
                      , Level
                      , Game
-                     , Input
                      , Menu
                      , Resource
                      , Render
-                     , Texture
                        Util
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7
                      , Yampa
                      , OpenGL
-                     , SDL
-                     , SDL-image
-                     , SDL-ttf
-                     , SDL-mixer
+                     , GLUtil
+                     , lens
+                     , JuicyPixels
+                     , GLFW-b
                      , containers
                      , directory
                      , filepath
                      , mtl
                      , transformers
+                     , vector
 
   hs-source-dirs:      src/
   default-language:    Haskell2010

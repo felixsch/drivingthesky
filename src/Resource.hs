@@ -13,6 +13,8 @@ module Resource
 
   , withResource
   , withTexture
+  
+  , getShaders
 
   , initResources
   ) where
@@ -26,14 +28,13 @@ import Data.IORef
 import Data.Maybe 
 import qualified Data.Map as M
 
-import Graphics.UI.SDL.Mixer (Music)
-import Graphics.UI.SDL.Mixer.Music (loadMUS)
+import Graphics.Rendering.OpenGL hiding (Level)
 
-import Graphics.UI.SDL.TTF
+import Graphics.GLUtil.Textures
+import Graphics.GLUtil.Shaders
 
 import Texture
 import Level
-
 
 
 
@@ -43,39 +44,47 @@ data Resource = TextureR { resName :: String
               | LevelR { resName :: String
                        , resPath :: FilePath
                        , resLevel     :: Maybe Level }
-              | MusicR { resName :: String
-                       , resPath :: FilePath
-                       , resMusic     :: Maybe Music }
-              | FontR { resName :: String
-                      , resPath :: FilePath
-                      , resFont     :: Maybe Font } 
+              | ShaderR { resName :: String
+                        , resShaderType :: ShaderType
+                        , resPath :: FilePath
+                        , resShader :: Maybe Shader }
+
+--              | MusicR { resName :: String
+--                       , resPath :: FilePath
+--                       , resMusic     :: Maybe Music }
+--              | FontR { resName :: String
+--                      , resPath :: FilePath
+--                      , resFont     :: Maybe Font } 
 
 instance Show Resource where
   show (TextureR name path _) = name ++ " (texture:" ++ path ++ ")"
   show (LevelR name path _) = name ++ " (level:" ++ path ++ ")"
-  show (MusicR name path _) = name ++ " (music:" ++ path ++ ")"
-  show (FontR name path _) = name ++ " (font:" ++ path ++ ")"
+  show (ShaderR name typ path _) = name ++ " (" ++ show typ ++ " shader: " ++ path ++ ")"
+
+ -- show (MusicR name path _) = name ++ " (music:" ++ path ++ ")"
+ -- show (FontR name path _) = name ++ " (font:" ++ path ++ ")"
 
 
 loadResource :: Resource -> IO Resource
 loadResource tex@(TextureR name path mTex)
   | isJust mTex   = return tex
-  | otherwise     = TextureR name path . Just <$> loadTexture path
+  | otherwise     = TextureR name path . Just <$> loadTexture' path
 loadResource level@(LevelR name path mLevel)
   | isJust mLevel = return level
   | otherwise     = LevelR name path . Just <$> loadLevel path
-loadResource music@(MusicR name path mMusic)
-  | isJust mMusic = return music
-  | otherwise     = MusicR name path . Just <$> loadMUS path
-loadResource font@(FontR name path mFont)
-  | isJust mFont  = return font
-  | otherwise     = FontR name path . Just <$> openFont path 32
+loadResource shader@(ShaderR name typ path mShader)
+  | isJust mShader = return shader
+  | otherwise     = ShaderR name typ path . Just <$> loadShader typ path
 
-finalizeResource :: Resource -> IO ()
-finalizeResource (TextureR _ _ mTex)
-  | isJust mTex   = maybe (return ()) freeTexture mTex
-  | otherwise     = return ()
-finalizeResource _   = return ()
+
+
+--loadResource music@(MusicR name path mMusic)
+--  | isJust mMusic = return music
+--  | otherwise     = MusicR name path . Just <$> loadMUS path
+--loadResource font@(FontR name path mFont)
+--  | isJust mFont  = return font
+--  | otherwise     = FontR name path . Just <$> openFont path 32
+
 
 data Resources = Resources (IORef (M.Map String Resource))
 
@@ -101,14 +110,7 @@ addResources (Resources ref) resources = do
 delResources :: Resources -> [String] -> IO ()
 delResources (Resources ref) names = do
         res <- readIORef ref
-        newRes <- foldM del res names
-        atomicWriteIORef ref newRes
-  where
-      del res n = case M.lookup n res of
-                       Nothing -> return res
-                       Just r  -> do
-                           finalizeResource r
-                           return $ M.delete (resName r) res
+        atomicWriteIORef ref (foldl (flip M.delete) res names)
 
 withResource :: Resources -> String -> (Resource -> IO ()) -> IO ()
 withResource resources name f = maybe (return ()) f =<< getResource resources name
@@ -121,6 +123,18 @@ withTexture r n f = withResource r n toTexture
       toTexture _                       = return ()
 
 
+getShaders :: Resources -> [String] -> IO [Shader]
+getShaders res = mapM (\name -> maybe (notFound name) toShader =<< getResource res name)
+  where
+      notFound s  = error $ "Could not find Shader named `" ++ s ++ "`"
+      toShader  (ShaderR _ _ _ (Just x)) = return x
+      toShader  _                      = error "Could not fetch get Shader..."
+
+
+
+
+
+
 initResources :: FilePath -> IO Resources
 initResources path = newResources 
   [ TextureR "logo" (inst "data/logo.png") Nothing
@@ -128,6 +142,8 @@ initResources path = newResources
   , TextureR "play" (inst "data/play.png") Nothing
   , TextureR "quit" (inst "data/quit.png") Nothing
   , LevelR "level1" (inst "levels/basic.lvl") Nothing
+  , ShaderR "menuVert" VertexShader (inst "data/shader/menu.vert") Nothing
+  , ShaderR "menuFrag" FragmentShader (inst "data/shader/menu.frag") Nothing
   ]
   where
      inst = (</>) path

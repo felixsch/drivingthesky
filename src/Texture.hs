@@ -1,32 +1,41 @@
 module Texture
   ( Tex (..)
-  , loadTexture
-  , freeTexture
+  , loadTexture'
   , renderTexture
   ) where
 
 import Control.Monad.IO.Class 
+import Control.Applicative
 
-import qualified Graphics.UI.SDL as SDL
-import qualified Graphics.UI.SDL.Image as SDL
 
 import Graphics.Rendering.OpenGL
+
+import Graphics.Rendering.OpenGL hiding (Level)
+
+import Graphics.GLUtil.JuicyTextures
+import Graphics.GLUtil.Textures
 
 import Util
 
 
-data Tex = Tex { texWidth  :: R
-               , texHeight :: R
+data Tex = Tex { texW  :: GLsizei
+               , texH :: GLsizei
                , texObject :: TextureObject }
 
 
-loadTexture :: (MonadIO m) => FilePath -> m Tex
-loadTexture path = liftIO $ do
-  surface <- SDL.loadTyped path SDL.PNG
-  pixels  <- SDL.surfaceGetPixels surface
-  
-  let w = fromIntegral $ SDL.surfaceGetWidth surface
-  let h = fromIntegral $ SDL.surfaceGetHeight surface
+
+loadTexture' :: FilePath -> IO Tex
+loadTexture' path = checkIfLoaded =<< readTexInfo path 
+  (\tex -> Tex (texWidth tex) (texHeight tex) <$> loadTexture tex)
+  where
+      checkIfLoaded (Left  err) = error $ "Could not load texture: " ++ err
+      checkIfLoaded (Right tex) = return tex
+
+{-
+loadPngTexture :: (MonadIO m) => FilePath -> m Tex
+loadPngTexture path = liftIO $ do
+ 
+  (ImageRGBA8 (Image w h dat)) <- loadPng path
 
   [obj] <- liftIO $ genObjectNames 1
 
@@ -34,18 +43,16 @@ loadTexture path = liftIO $ do
   textureWrapMode Texture2D S $= (Repeated, Repeat)
   textureWrapMode Texture2D T $= (Repeated, Repeat)
   textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
+ 
+  unsafeWith dat $ \ptr ->
+    texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D (fromIntegral w) (fromIntegral h)) 0 (PixelData RGBA UnsignedByte ptr)
 
-  let pdata = PixelData RGBA UnsignedByte pixels
-
-  texImage2D Texture2D NoProxy 0 RGBA' (TextureSize2D w h) 0 pdata
-
-  SDL.freeSurface surface
 
   return $ Tex (toR w) (toR h) obj
 
 freeTexture :: (MonadIO m) => Tex -> m ()
 freeTexture tex = liftIO $ deleteObjectNames [texObject tex]
-
+-}
 
 renderTexture :: (MonadIO m) => Tex -> (R,R) -> (R,R) -> Alpha -> m ()
 renderTexture tex (x,y) (w,h) alpha = liftIO $ do
@@ -53,6 +60,7 @@ renderTexture tex (x,y) (w,h) alpha = liftIO $ do
   textureBinding Texture2D $= Just (texObject tex)
 
   renderPrimitive Quads $ do
+    color'
     tC2 (TexCoord2 0 1) >> v3 (Vertex3 x y 0.0) >> color'
     tC2 (TexCoord2 0 0) >> v3 (Vertex3 x (y + h') 0.0) >> color'
     tC2 (TexCoord2 1 0) >> v3 (Vertex3 (x + w') (y + h') 0.0) >> color'
@@ -61,5 +69,5 @@ renderTexture tex (x,y) (w,h) alpha = liftIO $ do
 
   where
     color' = c4 (Color4 1.0 1.0 1.0 alpha)
-    w'     = texWidth tex
-    h'     = texHeight tex
+    w'     = toR $ texW tex
+    h'     = toR $ texH tex

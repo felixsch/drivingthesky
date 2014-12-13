@@ -11,11 +11,12 @@ module Util
 
 import Data.Maybe
 import Graphics.Rendering.OpenGL
-import Graphics.UI.SDL.Video
+import Graphics.UI.GLFW
 import Unsafe.Coerce
 
 
 -- Just for testing purpose
+gameWidth, gameHeight :: Int
 gameWidth = 1366
 gameHeight = 786
 
@@ -45,5 +46,5 @@ c4 = color
 begin :: IO ()
 begin = clear [ColorBuffer, DepthBuffer]
 
-end :: IO ()
-end = glSwapBuffers >> flush
+end :: Window -> IO ()
+end win = swapBuffers win >> flush

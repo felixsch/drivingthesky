@@ -3,9 +3,9 @@ module Game
   ) where
 
 import FRP.Yampa
+import FRP.Yampa.GLFW
 
 import State
-import Input
 
-drivingthesky :: SF Input GameState
+drivingthesky :: SF (Event GLFW) GameState
 drivingthesky = arr $ const initialGameState
