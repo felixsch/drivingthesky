@@ -15,6 +15,7 @@ module Resource
   , withTexture
   
   , getShaders
+  , getTextures
 
   , initResources
   ) where
@@ -130,9 +131,12 @@ getShaders res = mapM (\name -> maybe (notFound name) toShader =<< getResource r
       toShader  (ShaderR _ _ _ (Just x)) = return x
       toShader  _                      = error "Could not fetch get Shader..."
 
-
-
-
+getTextures :: Resources -> [String] -> IO [Tex]
+getTextures res = mapM (\name -> maybe (notFound name) toTexture =<< getResource res name)
+  where
+     notFound t = error $ "Could not find Texture named `" ++ t ++ "`"
+     toTexture (TextureR _ _ (Just x)) = return x
+     toTexture _                       = error "Could not fetch Texture..."
 
 
 initResources :: FilePath -> IO Resources
