@@ -146,8 +146,8 @@ initResources path = newResources
   , TextureR "play" (inst "data/play.png") Nothing
   , TextureR "quit" (inst "data/quit.png") Nothing
   , LevelR "level1" (inst "levels/basic.lvl") Nothing
-  , ShaderR "menuVert" VertexShader (inst "data/shader/menu.vert") Nothing
-  , ShaderR "menuFrag" FragmentShader (inst "data/shader/menu.frag") Nothing
+  --, ShaderR "menuVert" VertexShader (inst "data/shader/menu.vert") Nothing
+  --, ShaderR "menuFrag" FragmentShader (inst "data/shader/menu.frag") Nothing
   ]
   where
      inst = (</>) path
