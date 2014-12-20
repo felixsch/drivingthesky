@@ -35,7 +35,7 @@ executable drivingthesky
                      , Render
                        Util
   -- other-extensions:    
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6 && <4.8
                      , Yampa
                      , OpenGL
                      , GLUtil
