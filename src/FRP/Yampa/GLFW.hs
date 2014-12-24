@@ -41,8 +41,10 @@ runGLFW win io sf = do
             when stopped $ writeIORef close True >> putStrLn "Stop was triggered"
             return ()
 
+    makeContextCurrent $ Just win
+
     setWindowCloseCallback win (Just $ \_ -> void $ writeIORef close True)
-  --  setWindowSizeCallback win (Just $ \_ w h ->  event' $ Resize w h)
+    setWindowSizeCallback win (Just $ \_ w h ->  event' $ Resize w h)
     setKeyCallback win (Just $ \_ k _ s m -> event' $ KeyInput k s m)
 
     unlessM $ do
