@@ -26,10 +26,13 @@ import Paths_drivingthesky
 
 render :: GLFW.Window -> GameStatus -> GameState -> Resources -> IO Bool
 render win (GameMainMenu) st mgr = do
+
     clear [ColorBuffer, DepthBuffer]
     c4 (Color4 0.5 0.5 0.5 1.0)
 
     cube 0.5
+    
+    get errors >>= mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
     GLFW.swapBuffers win
     GLFW.pollEvents
     return False
