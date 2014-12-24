@@ -2,7 +2,6 @@ module FRP.Yampa.GLFW
   ( GLFW(..)
   , runGLFW
   , redraw
-  , resized
   , keysOnly
   , keyPress
   , keyPressed
@@ -18,13 +17,15 @@ import FRP.Yampa
 
 
 data GLFW = Redraw
-          | Resize Int Int
           | KeyInput Key KeyState ModifierKeys
           deriving (Eq, Show)
 
 
-runGLFW :: Window -> (st -> IO Bool) -> SF (Event GLFW) st -> IO ()
-runGLFW win io sf = do
+type ResizeFunc = (Window -> Int -> Int -> IO ())
+
+
+runGLFW :: Window -> ResizeFunc -> (st -> IO Bool) -> SF (Event GLFW) st -> IO ()
+runGLFW win resize io sf = do
     tm  <- newIORef (0.0 :: Double)
     close <- newIORef False
 
@@ -44,7 +45,7 @@ runGLFW win io sf = do
     makeContextCurrent $ Just win
 
     setWindowCloseCallback win (Just $ \_ -> void $ writeIORef close True)
-    setWindowSizeCallback win (Just $ \_ w h ->  event' $ Resize w h)
+    setWindowSizeCallback win (Just $ resize)
     setKeyCallback win (Just $ \_ k _ s m -> event' $ KeyInput k s m)
 
     unlessM $ do
@@ -57,11 +58,6 @@ unlessM f = do
     unless run $ unlessM f
 
 
-resized :: SF (Event GLFW) (Event (Int, Int))
-resized = arr (mapFilterE f)
-  where
-      f (Resize w h) = Just (w,h)
-      f _            = Nothing
 
 
 redraw :: SF (Event GLFW) (Event ())

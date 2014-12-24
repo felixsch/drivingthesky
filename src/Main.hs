@@ -34,6 +34,12 @@ render win (GameMainMenu) st mgr = do
     GLFW.pollEvents
     return False
 
+resize :: GLFW.Window -> Int -> Int -> IO ()
+resize win w h = do
+    viewport $= (Position 0 0, Size (fromIntegral w) (fromIntegral h))
+    perspective 45.0 (fromIntegral w/ fromIntegral h) 0.1 100.0
+    putStrLn "Resize..."
+
 
 cube :: GLfloat -> IO ()
 cube w = do
@@ -85,7 +91,7 @@ main = do
     GLFW.setErrorCallback $ Just $ (\_ err -> putStrLn $ "GLFW ERROR: " ++ err)
     m@(Just window) <- GLFW.createWindow 640 360 "DrivingTheSky!" Nothing Nothing
 
-    runGLFW window (\st -> render window (gameStatus st) st =<< updateResources res st) drivingthesky 
+    runGLFW window resize (\st -> render window (gameStatus st) st =<< updateResources res st) drivingthesky 
 
     GLFW.destroyWindow window
 
