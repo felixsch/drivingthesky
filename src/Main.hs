@@ -20,7 +20,7 @@ import Util
 
 import Paths_drivingthesky
 
-
+import Debug.Trace
 
 
 
@@ -102,8 +102,9 @@ main = do
     unless hasInit $ error "Could not intialize GLFW"
 
     GLFW.setErrorCallback $ Just $ (\_ err -> putStrLn $ "GLFW ERROR: " ++ err)
-    m@(Just window) <- GLFW.createWindow 1377 786 "DrivingTheSky!" Nothing Nothing
-    resize window 1377 786
+    m@(Just window) <- GLFW.createWindow 1376 786 "DrivingTheSky!" Nothing Nothing
+    GLFW.makeContextCurrent m
+    resize window 1376 786
 
     runGLFW window resize (\st -> render window (gameStatus st) st =<< updateResources res st) drivingthesky 
 
