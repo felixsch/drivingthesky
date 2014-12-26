@@ -28,13 +28,15 @@ render :: GLFW.Window -> GameStatus -> GameState -> Resources -> IO Bool
 render win (GameMainMenu) st mgr = do
 
     clear [ColorBuffer, DepthBuffer]
+    depthFunc $= Just Less
     loadIdentity
 
-    lookAt (Vertex3 0.0 0.0 (5.0)) (Vertex3 0.0 0.0 (-1.0)) (Vector3 0.0 1.0 0.0)
-    c4 (Color4 0.5 0.5 0.5 1.0) 
+    lookAt (Vertex3 0.0 0.0 (10.0)) (Vertex3 0.0 0.0 (-1.0)) (Vector3 0.0 1.0 0.0)
+    --c4 (Color4 0.5 0.5 0.5 1.0) 
 
     preservingMatrix $ do
-      cube 0.5
+      rotate 15.0 $ vector3d 1.0 0.0 0.0
+      drawBasicBlock (BasicBlock "#ff0000" 1.0) Flying 0.0 0.0
     
     get errors >>= mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
     GLFW.swapBuffers win
@@ -52,6 +54,51 @@ resize win w h = do
     loadIdentity
     flush
     putStrLn "Resize..."
+
+
+
+data DrawMode = Flying
+              | Tower
+
+
+class Drawable a where
+    draw :: a -> DrawMode -> GLdouble -> GLdouble -> IO ()
+
+
+
+
+levelStart :: GLdouble
+levelStart = -1.75
+
+l :: GLdouble
+l = 10.0
+
+b :: GLdouble
+b = 4.0
+
+data Block = BasicBlock String GLdouble 
+
+
+drawBasicBlock :: Block -> DrawMode -> GLdouble -> GLdouble -> IO ()
+drawBasicBlock (BasicBlock c h) mode x z = do
+    color $ color4d_ c
+    renderPrimitive Quads $ do 
+      v3 x     h     (-z)
+      v3 (x+b) h     (-z) 
+      v3 (x+b) 0.0   (-z)
+      v3 x     0.0   (-z)
+
+      v3 x     h     (-z)
+      v3 (x+b) h     (-z)
+      v3 (x+b) h     (-(z+l))
+      v3 x     h     (-(z+l))
+  where
+      v3 x y z = vertex $ Vertex3 x y z
+
+
+
+
+
 
 
 cube :: GLfloat -> IO ()
