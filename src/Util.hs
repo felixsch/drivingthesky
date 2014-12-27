@@ -8,6 +8,7 @@ module Util
   , vector3d
   , color4d
   , color4d_
+  , color4f_
   , tC2, v3, c4
   , begin, end
   , gameWidth, gameHeight
@@ -71,6 +72,19 @@ color4d_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
   | otherwise               = Color4 0.45 1.2 0.2 1.0
   where hexify = fst . head . readHex
 color4d_ _              = Color4 0.45 1.2 0.2 1.0
+
+color4f_ :: String -> Color4 GLfloat
+color4f_ ['#', r, g, b] = color4f_ ['#', r, r, b, b, g, g]
+color4f_ ['#', r1, r2, g1, g2, b1, b2] = color4f_ ['#', r1, r2, g1, g2, b1, b2, 'f' , 'f']
+color4f_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
+  | all isHexDigit (tail s) = Color4 (hexify [r1,r2] / 255)
+                                     (hexify [g1, g2] / 255)
+                                     (hexify [b1, b2] / 255)
+                                     (hexify [a1, a2] / 255)
+  | otherwise               = Color4 0.45 1.2 0.2 1.0
+  where hexify = fst . head . readHex
+color4f_ _              = Color4 0.45 1.2 0.2 1.0
+
 
 begin :: IO ()
 begin = clear [ColorBuffer, DepthBuffer]
