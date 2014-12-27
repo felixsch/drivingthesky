@@ -35,16 +35,16 @@ import Graphics.GLUtil.Textures
 import Graphics.GLUtil.Shaders
 
 import Texture
-import Level
+import Road
 
 
 
 data Resource = TextureR { resName :: String
                          , resPath :: FilePath
                          , resTexture     :: Maybe Tex }
-              | LevelR { resName :: String
+              | RoadR { resName :: String
                        , resPath :: FilePath
-                       , resLevel     :: Maybe Level }
+                       , resRoad     :: Maybe Road }
               | ShaderR { resName :: String
                         , resShaderType :: ShaderType
                         , resPath :: FilePath
@@ -59,7 +59,7 @@ data Resource = TextureR { resName :: String
 
 instance Show Resource where
   show (TextureR name path _) = name ++ " (texture:" ++ path ++ ")"
-  show (LevelR name path _) = name ++ " (level:" ++ path ++ ")"
+  show (RoadR name path _) = name ++ " (level:" ++ path ++ ")"
   show (ShaderR name typ path _) = name ++ " (" ++ show typ ++ " shader: " ++ path ++ ")"
 
  -- show (MusicR name path _) = name ++ " (music:" ++ path ++ ")"
@@ -70,9 +70,9 @@ loadResource :: Resource -> IO Resource
 loadResource tex@(TextureR name path mTex)
   | isJust mTex   = return tex
   | otherwise     = TextureR name path . Just <$> loadTexture' path
-loadResource level@(LevelR name path mLevel)
+loadResource level@(RoadR name path mLevel)
   | isJust mLevel = return level
-  | otherwise     = LevelR name path . Just <$> loadLevel path
+  | otherwise     = RoadR name path . Just <$> loadRoad path
 loadResource shader@(ShaderR name typ path mShader)
   | isJust mShader = return shader
   | otherwise     = ShaderR name typ path . Just <$> loadShader typ path
@@ -145,7 +145,7 @@ initResources path = newResources
   , TextureR "bg"   (inst "data/bg.png") Nothing
   , TextureR "play" (inst "data/play.png") Nothing
   , TextureR "quit" (inst "data/quit.png") Nothing
-  , LevelR "level1" (inst "levels/basic.lvl") Nothing
+  , RoadR "level1" (inst "levels/basic.lvl") Nothing
   --, ShaderR "menuVert" VertexShader (inst "data/shader/menu.vert") Nothing
   --, ShaderR "menuFrag" FragmentShader (inst "data/shader/menu.frag") Nothing
   ]

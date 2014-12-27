@@ -27,12 +27,11 @@ executable drivingthesky
   other-modules:       Paths_drivingthesky
                      , FRP.Yampa.GLFW
                      , Audio
-                     , State
-                     , Level
+                     , Road
                      , Game
-                     , Menu
                      , Resource
                      , Render
+                     , Globals
                        Util
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.8

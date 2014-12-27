@@ -1,77 +1,58 @@
 module Util
   ( whenM
-  , R
+  , GLf
   , Alpha
-  , toR
-  , fromR
-  , vertex3d
-  , vector3d
-  , color4d
-  , color4d_
+  , toGLf
+  , fromGLf
+  , vertex3f
+  , vector3f
+  , color4f
   , color4f_
-  , tC2, v3, c4
-  , begin, end
-  , gameWidth, gameHeight
+  , vert3
+  , norm3
+  , col4
+
   ) where
 
-import Data.Maybe
 import Graphics.Rendering.OpenGL
-import Graphics.UI.GLFW
 import Unsafe.Coerce
 import Numeric (readHex)
 import Data.Char (isHexDigit)
 
 
--- Just for testing purpose
-gameWidth, gameHeight :: Int
-gameWidth = 1366
-gameHeight = 786
 
 whenM :: (Monad m) => m (Maybe a) -> (a -> m ()) -> m ()
 whenM s f = maybe (return ()) f =<< s
 
 
-type R = GLdouble
-type Alpha = R
+type GLf = GLfloat
+type Alpha = GLf
 
-toR :: a -> R
-toR = unsafeCoerce
+toGLf :: a -> GLf
+toGLf = unsafeCoerce
 
-fromR :: R -> a
-fromR = unsafeCoerce
-
-
-vertex3d :: GLdouble -> GLdouble -> GLdouble -> Vertex3 GLdouble
-vertex3d = Vertex3
-
-vector3d :: GLdouble -> GLdouble -> GLdouble -> Vector3 GLdouble
-vector3d = Vector3
-
-color4d :: GLdouble -> GLdouble -> GLdouble -> GLdouble -> Color4 GLdouble
-color4d = Color4
+fromGLf :: GLf -> a
+fromGLf = unsafeCoerce
 
 
-tC2 :: TexCoord2 R -> IO ()
-tC2 = texCoord
+vertex3f :: GLf -> GLf -> GLf -> Vertex3 GLf
+vertex3f = Vertex3
 
-v3 :: Vertex3 R -> IO ()
-v3 = vertex
+vector3f :: GLf -> GLf -> GLf -> Vector3 GLf
+vector3f = Vector3
 
-c4 :: Color4 R -> IO ()
-c4 = color
+color4f :: GLf -> GLf -> GLf -> GLf -> Color4 GLf
+color4f = Color4
 
 
-color4d_ :: String -> Color4 GLdouble
-color4d_ ['#', r, g, b] = color4d_ ['#', r, r, b, b, g, g]
-color4d_ ['#', r1, r2, g1, g2, b1, b2] = color4d_ ['#', r1, r2, g1, g2, b1, b2, 'f' , 'f']
-color4d_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
-  | all isHexDigit (tail s) = Color4 (hexify [r1,r2] / 255)
-                                     (hexify [g1, g2] / 255)
-                                     (hexify [b1, b2] / 255)
-                                     (hexify [a1, a2] / 255)
-  | otherwise               = Color4 0.45 1.2 0.2 1.0
-  where hexify = fst . head . readHex
-color4d_ _              = Color4 0.45 1.2 0.2 1.0
+vert3 :: GLf -> GLf -> GLf -> IO ()
+vert3 x y z = vertex $ Vertex3 x y z
+
+norm3 :: GLf -> GLf -> GLf -> IO ()
+norm3 x y z = normal $ Normal3 x y z
+
+col4 :: GLf -> GLf -> GLf -> GLf -> IO ()
+col4 r g b a = color $ Color4 r g b a
 
 color4f_ :: String -> Color4 GLfloat
 color4f_ ['#', r, g, b] = color4f_ ['#', r, r, b, b, g, g]
@@ -84,10 +65,3 @@ color4f_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
   | otherwise               = Color4 0.45 1.2 0.2 1.0
   where hexify = fst . head . readHex
 color4f_ _              = Color4 0.45 1.2 0.2 1.0
-
-
-begin :: IO ()
-begin = clear [ColorBuffer, DepthBuffer]
-
-end :: Window -> IO ()
-end win = swapBuffers win >> flush
