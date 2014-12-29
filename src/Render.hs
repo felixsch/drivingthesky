@@ -1,20 +1,23 @@
 module Render
   ( render
+  , roadShunk
   ) where
 
-
+import Prelude hiding (foldr)
 import Control.Lens
 
 import qualified Graphics.UI.GLFW as GLFW
-import qualified Graphics.Rendering.OpenGL
+import Graphics.Rendering.OpenGL
 
 import qualified Data.Sequence as S
 import qualified Data.Map as M
+import Data.Foldable
 
 import Util
 import Game
 import Road
 import Resource
+import Globals
 
 
 
@@ -26,21 +29,103 @@ render status
   | status == MainMenu   = renderMainMenu
 
 
+ab :: GLf -> GLf
+ab x = if x>=0 then x else -x
 
 
 
-roadShunk :: GameState -> S.Seq [Block]
-roadShunk state = undefined
+roadShunk :: Int -> GameState -> S.Seq [Block]
+roadShunk start state = foldr buildRoad S.empty $
+    S.drop start (road' ^. roadDef)
+  where
+     road' = state ^?! road
+     buildRoad row s = s S.|> foldr buildRow [] row 
+     buildRow block row = row ++ [getBlock block (road' ^. roadBlocks)]
 
-renderLevel :: S.Seq [Block] -> IO ()
-renderLevel = undefined
+getBlock :: Int -> M.Map Int Block -> Block
+getBlock b def = case M.lookup b def of
+   Just x  -> x
+   Nothing -> error $ "Failed to get block definition for blocktype: " ++ show b
+
+
+renderLevel :: Int -> S.ViewL [Block] -> IO ()
+renderLevel _     (S.EmptyL)      = return ()
+renderLevel depth (row S.:< road) = renderRow row 0.0 z >> renderLevel (depth + 1) (S.viewl road)
+  where
+      z = -(fromIntegral depth) * blockWidth
+
+renderRow :: [Block] -> GLf -> GLf -> IO ()
+renderRow (i:is) x z = do
+  preservingMatrix $ do
+    translate $ vector3f x 0.0 z
+    renderBlock i
+  renderRow is (x + blockWidth) z
+renderRow []     _ _ = return ()
+
+renderBlock :: Block -> IO ()
+renderBlock (EmptyBlock) = return ()
+renderBlock (Block c h)  = drawNormalBlock c h
+renderBlock b            = (putStrLn $ "Not implemented block: " ++ show b)
+                           >> drawNormalBlock "#ffff00" 0.2
+
+
+drawNormalBlock :: String -> GLf -> IO ()
+drawNormalBlock c h = do
+    color $ color4f_ c
+    renderPrimitive Quads $ do 
+
+      norm3 0.0    1.0  0.0
+      vert3 0.0    h     0.0
+      vert3 blockWidth      h    0.0
+      vert3 blockWidth      h    (-blockHeight)
+      vert3 0.0    h     (-blockHeight)
+
+      color $ darken 0.2 $ color4f_ c
+
+      norm3 0.0    0.0   (-1.0)
+      vert3 0.0    h     0.0
+      vert3 blockWidth      h     0.0
+      vert3 blockWidth      d     0.0
+      vert3 0.0    d     0.0
+
+      norm3 (-1.0) 0.0   0.0
+      vert3 0.0    d     0.0
+      vert3 0.0    d     (-blockHeight)
+      vert3 0.0    h     (-blockHeight)
+      vert3 0.0    h     0.0
+
+      norm3 1.0    0.0   0.0
+      vert3 blockWidth      d     0.0
+      vert3 blockWidth      h     0.0
+      vert3 blockWidth      h     (-blockHeight)
+      vert3 blockWidth      d     (-blockHeight)
+  where
+      d = 0.0
+      darken f (Color4 r g b a) = Color4 (r-f) (g-f) (b-f) a
 
 renderGame :: GLFW.Window -> Game -> Resources -> IO Bool
 renderGame win game res = do
-    renderLevel $ roadShunk (game ^. state)
 
-     
+    clear [ColorBuffer, DepthBuffer]
+    depthFunc $= Just Less
+    loadIdentity
+
+    lookAt eye (Vertex3 0.0 4.0 (-200.0)) (Vector3 0.0 1.0 0.0)
+    renderLevel (length - start) $ S.viewl $ roadShunk start (game ^. state) 
+    
+    get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
+
+    GLFW.swapBuffers win
+    flush
+    GLFW.pollEvents
+
     return False
+  where
+      eye :: Vertex3 GLdouble
+      eye    = Vertex3 0.0 0.8 $ fromGLf (state' ^?! ship ^. _z + 1.0)
+      state' = game ^. state
+      length = S.length $ state' ^?! road ^. roadDef
+      start  = round $ ab (state' ^?! ship ^. _z / blockHeight)
 
 
 renderPause :: GLFW.Window -> Game -> Resources -> IO Bool
@@ -116,41 +201,6 @@ render win camZref (GameMainMenu) st mgr = do
     camZref $= (camZ - 0.01)
     return False
 
-drawBasicBlock :: String -> GLdouble -> IO ()
-drawBasicBlock c h = do
-    color $ color4d_ c
-    renderPrimitive Quads $ do 
-
-      n3 0.0    1.0  (0.0 :: GLdouble)
-      v3 0.0    h     0.0
-      v3 b      h    0.0
-      v3 b      h    (-l)
-      v3 0.0    h     (-l)
-
-
-      color $ darken 0.2 $ color4d_ c
-
-      n3 0.0    0.0   (-1.0 :: GLdouble)
-      v3 0.0    h     0.0
-      v3 b      h     0.0
-      v3 b      d     0.0
-      v3 0.0    d     (0.0 :: GLdouble)
-
-      n3 (-1.0) 0.0   (0.0 :: GLdouble)
-      v3 0.0    d     (0.0 :: GLdouble)
-      v3 0.0    d     (-l)
-      v3 0.0    h     (-l)
-      v3 0.0    h     0.0
-
-      n3 1.0    0.0   (0.0 :: GLdouble)
-      v3 b      d     0.0
-      v3 b      h     0.0
-      v3 b      h     (-l)
-      v3 b      d     (-l)
-  where
-      v3 x y z = vertex $ Vertex3 x y z
-      n3 x y z = normal $ Normal3 x y z
-      darken f (Color4 r g b a) = Color4 (r-f) (g-f) (b-f) a
 
 
 
