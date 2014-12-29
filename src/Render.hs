@@ -3,8 +3,13 @@ module Render
   ) where
 
 
+import Control.Lens
+
 import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL
+
+import qualified Data.Sequence as S
+import qualified Data.Map as M
 
 import Util
 import Game
@@ -23,8 +28,18 @@ render status
 
 
 
+
+roadShunk :: GameState -> S.Seq [Block]
+roadShunk state = undefined
+
+renderLevel :: S.Seq [Block] -> IO ()
+renderLevel = undefined
+
 renderGame :: GLFW.Window -> Game -> Resources -> IO Bool
-renderGame win st res = do
+renderGame win game res = do
+    renderLevel $ roadShunk (game ^. state)
+
+     
     return False
 
 

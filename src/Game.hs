@@ -5,8 +5,9 @@ module Game
   , Game(..)
   , status
   , state
-  , ship, road
+  , ship, road, speed
   , drivingthesky
+  , initGame
   ) where
 
 import Control.Lens
@@ -26,7 +27,8 @@ data GameStatus = Running
                 deriving (Show, Eq)
 
 data GameState = Playing     { _ship   :: Vector3 GLf
-                             , _road   :: Road }
+                             , _road   :: Road
+                             , _speed  :: GLf }
                | Paused      {}
                | Menu        {}
                | LevelSelect {}
@@ -39,9 +41,9 @@ makeLenses ''GameState
 makeLenses ''Game
 
 initGame :: Game
-initGame = Game Running (Playing (vector3f 0.0 0.0 0.0) testRoad)
+initGame = Game Running (Playing (vector3f 0.0 0.0 0.0) testRoad 0.0)
+  
                           
-
 
 drivingthesky :: SF (Event GLFW) Game
 drivingthesky = arr $ const initGame
