@@ -29,17 +29,12 @@ render status
   | status == MainMenu   = renderMainMenu
 
 
-ab :: GLf -> GLf
-ab x = if x>=0 then x else -x
-
-
-
 roadShunk :: Int -> GameState -> S.Seq [Block]
 roadShunk start state = foldr buildRoad S.empty $
     S.drop start (road' ^. roadDef)
   where
      road' = state ^?! road
-     buildRoad row s = s S.|> foldr buildRow [] row 
+     buildRoad row s = foldr buildRow [] row S.<| s
      buildRow block row = row ++ [getBlock block (road' ^. roadBlocks)]
 
 getBlock :: Int -> M.Map Int Block -> Block
@@ -50,12 +45,16 @@ getBlock b def = case M.lookup b def of
 
 renderLevel :: Int -> S.ViewL [Block] -> IO ()
 renderLevel _     (S.EmptyL)      = return ()
-renderLevel depth (row S.:< road) = renderRow row 0.0 z >> renderLevel (depth + 1) (S.viewl road)
+renderLevel depth (row S.:< road) = renderRow row renderStartPos z
+                                  >> (putStrLn $ "z = " ++ show z)
+                                  >> renderLevel (depth + 1) (S.viewl road)
   where
-      z = -(fromIntegral depth) * blockWidth
+      z = -(fromIntegral depth) * blockHeight
 
 renderRow :: [Block] -> GLf -> GLf -> IO ()
 renderRow (i:is) x z = do
+  putStrLn $ "render block at (" ++ show x ++ ", 0.0, " ++ show z ++ ")"
+
   preservingMatrix $ do
     translate $ vector3f x 0.0 z
     renderBlock i
@@ -111,8 +110,10 @@ renderGame win game res = do
     loadIdentity
 
     lookAt eye (Vertex3 0.0 4.0 (-200.0)) (Vector3 0.0 1.0 0.0)
-    renderLevel (length - start) $ S.viewl $ roadShunk start (game ^. state) 
-    
+    renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
+   
+    putStrLn $ "length = " ++ (show length_)
+    putStrLn $ "start  = " ++ (show start)
     get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
 
     GLFW.swapBuffers win
@@ -124,8 +125,9 @@ renderGame win game res = do
       eye :: Vertex3 GLdouble
       eye    = Vertex3 0.0 0.8 $ fromGLf (state' ^?! ship ^. _z + 1.0)
       state' = game ^. state
-      length = S.length $ state' ^?! road ^. roadDef
-      start  = round $ ab (state' ^?! ship ^. _z / blockHeight)
+      length_ = S.length $ state' ^?! road ^. roadDef
+      start   = round $ ab (state' ^?! ship ^. _z / blockHeight)
+      ab  x   = if x >= 0 then x else 0
 
 
 renderPause :: GLFW.Window -> Game -> Resources -> IO Bool
@@ -140,9 +142,6 @@ renderMainMenu win st res = do
 renderLevelSelect :: GLFW.Window -> Game -> Resources -> IO Bool
 renderLevelSelect win st res = do
     return False
-
-
-
 
 
 {-

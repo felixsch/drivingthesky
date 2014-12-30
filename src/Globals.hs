@@ -8,7 +8,7 @@ import Util
 
 
 renderStartPos :: GLf
-renderStartPos = 3.5 * blockWidth
+renderStartPos = -(3.5 * blockWidth)
 
 blockWidth :: GLf
 blockWidth = 1.0
