@@ -109,6 +109,7 @@ renderGame win game res = do
 
     putStrLn $ "input = " ++ show (game ^. input)
     putStrLn $ "ship  = " ++ show (state' ^?! ship)
+    putStrLn $ "eye   = " ++ show eye
     lookAt eye (Vertex3 0.0 4.0 (-200.0)) (Vector3 0.0 1.0 0.0)
     renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
    
@@ -121,7 +122,7 @@ renderGame win game res = do
     return False
   where
       eye :: Vertex3 GLdouble
-      eye    = Vertex3 0.0 0.8 $ fromGLf (state' ^?! ship ^. _z + 1.0)
+      eye    = Vertex3 0.0 0.8 $ realToFrac (state' ^?! ship ^. _z + 1.0)
       state' = game ^. state
       length_ = S.length $ state' ^?! road ^. roadDef
       start   = round $ ab (state' ^?! ship ^. _z / blockHeight)

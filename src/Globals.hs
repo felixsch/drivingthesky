@@ -22,4 +22,4 @@ movementPerStep :: GLf
 movementPerStep = 0.05
 
 accel :: GLf
-accel = 0.0001
+accel = 0.5

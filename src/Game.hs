@@ -81,7 +81,7 @@ playGame = proc i -> do
   speed <- integral <<^ calcSpeed -< i
   movX  <- integral <<^ calcX -< i
   movY  <- integral <<^ calcY -< i
-  z     <- integral <<^ calcZ -< (speed, i)
+  z     <- accumHoldBy (-) 0.0 -< Event speed
 
   returnA -< Game { _input  = i
                   , _status = Running
@@ -99,6 +99,3 @@ playGame = proc i -> do
       calcX i            = fromGLf $ (i ^. ioRight - i ^. ioLeft) * movementPerStep
       calcY :: Input -> Float
       calcY i            = 0.0 
-
-      calcZ :: (Float, Input) -> Float
-      calcZ (s, i) = s
