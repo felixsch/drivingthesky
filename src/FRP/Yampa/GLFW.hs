@@ -4,6 +4,7 @@ module FRP.Yampa.GLFW
   , redraw
   , keysOnly
   , keyPress
+  , key
   , keyPressed
   ) where
 
@@ -74,11 +75,16 @@ keysOnly = arr $ filterE isKeyInput
 keyPress :: SF (Event GLFW) (Event (Key, ModifierKeys))
 keyPress = keysOnly >>^ mapFilterE whenPressed
   where
-      whenPressed (KeyInput k KeyState'Pressed modifier) = Just (k, modifier)
+      whenPressed (KeyInput k KeyState'Pressed modifier)   = Just (k, modifier)
+      whenPressed (KeyInput k KeyState'Repeating modifier) = Just (k, modifier)
+      whenPressed _                                      = Nothing
+
+key :: Key -> SF (Event (Key, ModifierKeys)) (Event (Key, ModifierKeys))
+key k = arr $ filterE (\(k', _) -> k == k')
 
 
 keyPressed :: Key -> SF (Event GLFW) Bool
-keyPressed key = keyPress >>^ fromEvent . mapFilterE (isKey key) 
+keyPressed k = keyPress >>^ fromEvent . mapFilterE isKey
   where
-      isKey k (k', _) = Just (k == k')
+      isKey (k', _) = Just (k == k')
 

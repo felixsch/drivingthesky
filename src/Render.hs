@@ -46,15 +46,12 @@ getBlock b def = case M.lookup b def of
 renderLevel :: Int -> S.ViewL [Block] -> IO ()
 renderLevel _     (S.EmptyL)      = return ()
 renderLevel depth (row S.:< road) = renderRow row renderStartPos z
-                                  >> (putStrLn $ "z = " ++ show z)
                                   >> renderLevel (depth + 1) (S.viewl road)
   where
       z = -(fromIntegral depth) * blockHeight
 
 renderRow :: [Block] -> GLf -> GLf -> IO ()
 renderRow (i:is) x z = do
-  putStrLn $ "render block at (" ++ show x ++ ", 0.0, " ++ show z ++ ")"
-
   preservingMatrix $ do
     translate $ vector3f x 0.0 z
     renderBlock i
@@ -64,8 +61,9 @@ renderRow []     _ _ = return ()
 renderBlock :: Block -> IO ()
 renderBlock (EmptyBlock) = return ()
 renderBlock (Block c h)  = drawNormalBlock c h
-renderBlock b            = (putStrLn $ "Not implemented block: " ++ show b)
-                           >> drawNormalBlock "#ffff00" 0.2
+renderBlock b            = drawNormalBlock "#ffff00" 0.2
+-- renderBlock b            = (putStrLn $ "Not implemented block: " ++ show b)
+--                           >> drawNormalBlock "#ffff00" 0.2
 
 
 drawNormalBlock :: String -> GLf -> IO ()
@@ -109,11 +107,11 @@ renderGame win game res = do
     depthFunc $= Just Less
     loadIdentity
 
+    putStrLn $ "input = " ++ show (game ^. input)
+    putStrLn $ "ship  = " ++ show (state' ^?! ship)
     lookAt eye (Vertex3 0.0 4.0 (-200.0)) (Vector3 0.0 1.0 0.0)
     renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
    
-    putStrLn $ "length = " ++ (show length_)
-    putStrLn $ "start  = " ++ (show start)
     get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
 
     GLFW.swapBuffers win
