@@ -3,6 +3,7 @@ module Render
   , roadShunk
   ) where
 
+import Control.Monad
 import Prelude hiding (foldr)
 import Control.Lens
 
@@ -18,8 +19,6 @@ import Game
 import Road
 import Resource
 import Globals
-
-
 
 
 render :: GameStatus -> GLFW.Window -> Game -> Resources -> IO Bool
@@ -100,6 +99,69 @@ drawNormalBlock c h = do
       d = 0.0
       darken f (Color4 r g b a) = Color4 (r-f) (g-f) (b-f) a
 
+
+
+drawShipVert3 :: [Vertex3 GLf]
+drawShipVert3 = [ 
+                  v (-x)    0.0    0.0    -- left wing
+                , v 0.0     0.0    (-z)
+                , v (-i)    0.0    (-iz)
+
+                , v (-x)    0.0    0.0
+                , v (-i)    0.0    (-iz)
+                , v (-i2)   0.0    0.0
+
+                , v x       0.0    0.0    -- right wing
+                , v 0.0     0.0    (-z)
+                , v (i)    0.0    (-iz)
+
+                , v (x)     0.0    0.0
+                , v i       0.0    (-iz)
+                , v i2      0.0    0.0
+
+                , v 0.0     0.0    (-z)   -- middle bottom
+                , v (-i)    0.0    (-iz)
+                , v i       0.0    (-iz)
+
+
+
+
+                
+
+                ]
+  where
+    v = vertex3f
+    x = 0.6
+    z = 4.0
+    y = 0.5
+    i = x - 0.3      -- inner wing x
+    iz = 0.4     -- inner wing z
+    i2 = x - 0.1 -- wing back x
+      
+
+
+drawShip :: IO ()
+drawShip = do
+  color $ color4f_ "#ff0000"
+  renderPrimitive Triangles $ do
+    Prelude.mapM_ vertex drawShipVert3
+      
+    
+
+renderShip :: Vector3 GLf -> IO ()
+renderShip ship = preservingMatrix $ do
+                    translate vec
+                    drawShip 
+                    putStrLn $ "shipD = " ++ show vec
+                    return ()
+  where
+      x = ship ^. _x
+      y = ship ^. _y + 0.2
+      z = ship ^. _z
+      vec = Vector3 x y z
+
+
+
 renderGame :: GLFW.Window -> Game -> Resources -> IO Bool
 renderGame win game res = do
 
@@ -107,11 +169,15 @@ renderGame win game res = do
     depthFunc $= Just Less
     loadIdentity
 
-    putStrLn $ "input = " ++ show (game ^. input)
-    putStrLn $ "ship  = " ++ show (state' ^?! ship)
-    putStrLn $ "eye   = " ++ show eye
-    lookAt eye (Vertex3 0.0 4.0 (-200.0)) (Vector3 0.0 1.0 0.0)
+    putStrLn $ "input  = " ++ show (game ^. input)
+    putStrLn $ "ship   = " ++ show (state' ^?! ship)
+    putStrLn $ "eye    = " ++ show eye
+    putStrLn $ "startP = " ++ show renderStartPos
+    putStrLn $ "blockS = (" ++ show blockWidth ++ ", " ++ show blockHeight ++ ")"
+    lookAt eye view (Vector3 0.0 1.0 0.0)
+    putStrLn $ "start rendering with blockrow = " ++ show start
     renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
+    renderShip $ state' ^?! ship
    
     get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
 
@@ -122,10 +188,11 @@ renderGame win game res = do
     return False
   where
       eye :: Vertex3 GLdouble
-      eye    = Vertex3 0.0 0.8 $ realToFrac (state' ^?! ship ^. _z + 1.0)
+      eye    = Vertex3 0.0 1.3 $ realToFrac (state' ^?! ship ^. _z + 3.5)
+      view   = Vertex3 0.0 3.5 $ realToFrac ((-200) + state' ^?! ship ^. _z)
       state' = game ^. state
       length_ = S.length $ state' ^?! road ^. roadDef
-      start   = round $ ab (state' ^?! ship ^. _z / blockHeight)
+      start   = round $ ab (((-1) * state' ^?! ship ^. _z - blockHeight) / blockHeight)
       ab  x   = if x >= 0 then x else 0
 
 

@@ -22,7 +22,7 @@ resize _ w h = do
     matrixMode $= Projection
 
     loadIdentity
-    perspective 45.0 (fromIntegral w/ fromIntegral h) 0.1 2000.0
+    perspective 45.0 (fromIntegral w/ fromIntegral h) 0.1 200.0
 
     matrixMode $= Modelview 0
     loadIdentity

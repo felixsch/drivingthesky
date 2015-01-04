@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 
 module Util
   ( whenM
@@ -29,6 +29,8 @@ import Graphics.Rendering.OpenGL
 import Unsafe.Coerce
 import Numeric (readHex)
 import Data.Char (isHexDigit)
+
+import FRP.Yampa
 
 
 
@@ -91,6 +93,18 @@ toGLf = unsafeCoerce
 
 fromGLf :: GLf -> a
 fromGLf = unsafeCoerce
+
+
+instance VectorSpace GLf GLf where
+  zeroVector     = 0
+  negateVector x = -x
+
+  a *^ x         = a * x
+  x ^/ a         = x / a
+
+  x1 ^+^ x2      = x1 + x2
+  x1 ^-^ x2      = x1 - x2
+  x1 `dot` x2    = x1 * x2
 
 
 vertex3f :: GLf -> GLf -> GLf -> Vertex3 GLf
