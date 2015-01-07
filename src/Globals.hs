@@ -1,10 +1,9 @@
 module Globals
   ( renderStartPos
-  , blockWidth
-  , blockHeight
-  , shipWidth, shipHeight
+  , blockWidth, blockHeight
   , movementPerStep
   , accel
+  , shipSize
   ) where
 
 import Util
@@ -28,9 +27,6 @@ movementPerStep = 100.0
 accel :: GLf
 accel = 0.3
 
+shipSize :: GLf
+shipSize = 0.25
 
-shipWidth :: GLf
-shipWidth = 0.5
-
-shipHeight :: GLf
-shipHeight = 1.0

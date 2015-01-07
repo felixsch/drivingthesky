@@ -123,11 +123,6 @@ drawShipVert3 = [
                 , v (-i)    0.0    (-iz)
                 , v i       0.0    (-iz)
 
-
-
-
-                
-
                 ]
   where
     v = vertex3f
@@ -143,8 +138,10 @@ drawShipVert3 = [
 drawShip :: IO ()
 drawShip = do
   color $ color4f_ "#ff0000"
-  renderPrimitive Triangles $ do
-    Prelude.mapM_ vertex drawShipVert3
+  preservingMatrix $ do
+    scale shipSize shipSize shipSize
+    renderPrimitive Triangles $ do
+      Prelude.mapM_ vertex drawShipVert3
       
     
 
@@ -188,8 +185,8 @@ renderGame win game res = do
     return False
   where
       eye :: Vertex3 GLdouble
-      eye    = Vertex3 0.0 1.3 $ realToFrac (state' ^?! ship ^. _z + 3.5)
-      view   = Vertex3 0.0 3.5 $ realToFrac ((-200) + state' ^?! ship ^. _z)
+      eye    = Vertex3 0.0 1.4 $ realToFrac (state' ^?! ship ^. _z + 3.6)
+      view   = Vertex3 0.0 2.0 $ realToFrac ((-10) + state' ^?! ship ^. _z)
       state' = game ^. state
       length_ = S.length $ state' ^?! road ^. roadDef
       start   = round $ ab (((-1) * state' ^?! ship ^. _z - blockHeight) / blockHeight)
