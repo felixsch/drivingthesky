@@ -39,7 +39,6 @@ executable drivingthesky
                      , OpenGL
                      , GLUtil
                      , lens
-                     , JuicyPixels
                      , GLFW-b
                      , containers
                      , directory
