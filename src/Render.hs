@@ -13,6 +13,7 @@ import Graphics.Rendering.OpenGL
 import qualified Data.Sequence as S
 import qualified Data.Map as M
 import Data.Foldable
+import Data.Maybe
 
 import Util
 import Game
@@ -34,12 +35,7 @@ roadShunk start state = foldr buildRoad S.empty $
   where
      road' = state ^?! road
      buildRoad row s = foldr buildRow [] row S.<| s
-     buildRow block row = row ++ [getBlock block (road' ^. roadBlocks)]
-
-getBlock :: Int -> M.Map Int Block -> Block
-getBlock b def = case M.lookup b def of
-   Just x  -> x
-   Nothing -> error $ "Failed to get block definition for blocktype: " ++ show b
+     buildRow block row = row ++ [getBlock block road']
 
 
 renderLevel :: Int -> S.ViewL [Block] -> IO ()
@@ -63,6 +59,36 @@ renderBlock (Block c h)  = drawNormalBlock c h
 renderBlock b            = drawNormalBlock "#ffff00" 0.2
 -- renderBlock b            = (putStrLn $ "Not implemented block: " ++ show b)
 --                           >> drawNormalBlock "#ffff00" 0.2
+
+
+renderAABB :: String -> AABB -> IO ()
+renderAABB c (AABB p1 p2) = do
+    color $ color4f_ c
+    renderPrimitive Lines $ do
+        vert3 p1x p1y p1z
+        vert3 p1x p1y p2z
+
+        vert3 p1x p1y p2z
+        vert3 p1x p2y p2z
+
+        vert3 p1x p2y p2z
+        vert3 p1x p2y p1z
+
+        vert3 p1x p2y p2z
+        vert3 p2x p2y p1z
+
+        vert3 p1x p1y p1z
+        vert3 p2x p1y p1z
+
+  where
+      p1x = p1 ^. _x
+      p2x = p2 ^. _x
+
+      p1y = p1 ^. _y
+      p2y = p2 ^. _y
+
+      p1z = p1 ^. _z
+      p2z = p2 ^. _z
 
 
 drawNormalBlock :: String -> GLf -> IO ()
@@ -101,47 +127,83 @@ drawNormalBlock c h = do
 
 
 
-drawShipVert3 :: [Vertex3 GLf]
-drawShipVert3 = [ 
-                  v (-x)    0.0    0.0    -- left wing
-                , v 0.0     0.0    (-z)
-                , v (-i)    0.0    (-iz)
 
-                , v (-x)    0.0    0.0
-                , v (-i)    0.0    (-iz)
-                , v (-i2)   0.0    0.0
 
-                , v x       0.0    0.0    -- right wing
-                , v 0.0     0.0    (-z)
-                , v (i)    0.0    (-iz)
 
-                , v (x)     0.0    0.0
-                , v i       0.0    (-iz)
-                , v i2      0.0    0.0
 
-                , v 0.0     0.0    (-z)   -- middle bottom
-                , v (-i)    0.0    (-iz)
-                , v i       0.0    (-iz)
 
-                ]
-  where
-    v = vertex3f
-    x = 0.6
-    z = 4.0
-    y = 0.5
-    i = x - 0.3      -- inner wing x
-    iz = 0.4     -- inner wing z
-    i2 = x - 0.1 -- wing back x
-      
+
 
 
 drawShip :: IO ()
 drawShip = do
-  color $ color4f_ "#ff0000"
   preservingMatrix $ do
     scale shipSize shipSize shipSize
     renderPrimitive Triangles $ do
-      Prelude.mapM_ vertex drawShipVert3
+
+        color $ color4f_ "#383b53"
+        vert3 0.0   0.0  (-z)
+        vert3 (-x)  0.0  0.0
+        vert3 0.0   y    (-iz)
+
+        color $ color4f_ "#66717e"
+        vert3 0.0   0.0  (-z)
+        vert3 x     0.0  0.0
+        vert3 0.0   y    (-iz)
+
+  
+        color $ color4f_ "#66717e"
+        vert3 0.0   0.0  (-z)
+        vert3 (-x)  0.0  0.0
+        vert3 0.0   (-y) (-iz)
+
+        color $ color4f_ "#383b53"
+        vert3 0.0   0.0  (-z)
+        vert3 x     0.0  0.0
+        vert3 0.0   (-y) (-iz)
+
+        color $ color4f_ "#32213a"
+        vert3 0.0   (-y) (-iz)   
+        vert3 0.0   y    (-iz)
+        vert3 (-x)  0.0  0.0
+
+        vert3 0.0   (-y) (-iz)   
+        vert3 0.0   y    (-iz)
+        vert3 x     0.0  0.0
+
+
+
+
+{-
+        vert3 (-x)    0.0    0.0    -- left wing
+        vert3 0.0     0.0    (-z)
+        vert3 (-i)    0.0    (-iz)
+
+        vert3 (-x)    0.0    0.0
+        vert3 (-i)    0.0    (-iz)
+        vert3 (-i2)   0.0    0.0
+
+        vert3 x       0.0    0.0    -- right wing
+        vert3 0.0     0.0    (-z)
+        vert3 (i)    0.0    (-iz)
+
+        vert3 (x)     0.0    0.0
+        vert3 i       0.0    (-iz)
+        vert3 i2      0.0    0.0
+
+        vert3 0.0     0.0    (-z)   -- middle bottom
+        vert3 (-i)    0.0    (-iz)
+        vert3 i       0.0    (-iz) -}
+  where
+
+    iz = 0.2 -- inner space
+    x = 1.0
+    z = 4.0
+    y = 0.2
+    --i = x - 0.3      -- inner wing x
+    --iz = 0.4     -- inner wing z
+    --i2 = x - 0.1 -- wing back x
+
       
     
 
@@ -153,7 +215,7 @@ renderShip ship = preservingMatrix $ do
                     return ()
   where
       x = ship ^. _x
-      y = ship ^. _y + 0.2
+      y = ship ^. _y + 0.4
       z = ship ^. _z
       vec = Vector3 x y z
 
@@ -167,14 +229,15 @@ renderGame win game res = do
     loadIdentity
 
     putStrLn $ "input  = " ++ show (game ^. input)
-    putStrLn $ "ship   = " ++ show (state' ^?! ship)
+    putStrLn $ "ship   = " ++ show (ship')
     putStrLn $ "eye    = " ++ show eye
     putStrLn $ "startP = " ++ show renderStartPos
     putStrLn $ "blockS = (" ++ show blockWidth ++ ", " ++ show blockHeight ++ ")"
+    putStrLn $ "(aabb, block)  = " ++ show (game ^. state ^?! currentBlock)
     lookAt eye view (Vector3 0.0 1.0 0.0)
     putStrLn $ "start rendering with blockrow = " ++ show start
     renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
-    renderShip $ state' ^?! ship
+    renderShip ship'
    
     get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
 
@@ -184,12 +247,13 @@ renderGame win game res = do
 
     return False
   where
+      road'  = game ^. state ^?! road
+      ship'  = game ^. state ^?! ship
       eye :: Vertex3 GLdouble
-      eye    = Vertex3 0.0 1.4 $ realToFrac (state' ^?! ship ^. _z + 3.6)
-      view   = Vertex3 0.0 2.0 $ realToFrac ((-10) + state' ^?! ship ^. _z)
-      state' = game ^. state
-      length_ = S.length $ state' ^?! road ^. roadDef
-      start   = round $ ab (((-1) * state' ^?! ship ^. _z - blockHeight) / blockHeight)
+      eye    = Vertex3 0.0 1.4 $ realToFrac (ship' ^. _z + 3.6)
+      view   = Vertex3 0.0 2.0 $ realToFrac ((-10) + ship' ^. _z)
+      length_ = S.length $ road' ^. roadDef
+      start   = round $ ab (((-1) * ship' ^. _z - blockHeight) / blockHeight)
       ab  x   = if x >= 0 then x else 0
 
 

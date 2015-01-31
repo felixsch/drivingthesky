@@ -22,11 +22,11 @@ blockHeight :: GLf
 blockHeight = 2.0
 
 movementPerStep :: GLf
-movementPerStep = 100.0
+movementPerStep = 10.0
 
 accel :: GLf
 accel = 0.3
 
 shipSize :: GLf
-shipSize = 0.25
+shipSize = 0.15
 

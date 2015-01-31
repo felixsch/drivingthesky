@@ -8,11 +8,15 @@ module Util
   , fromGLf
   , vertex3f
   , vector3f
+  , normal3f
   , color4f
   , color4f_
   , vert3
   , norm3
   , col4
+
+  , AABB(..)
+  , boxIntersect 
   
   , Component3(..)
 
@@ -32,6 +36,21 @@ import Data.Char (isHexDigit)
 
 import FRP.Yampa
 
+
+data AABB = AABB { pMin :: Vertex3 GLf
+                 , pMax :: Vertex3 GLf }
+        deriving (Show)
+
+boxIntersect :: AABB -> AABB -> Bool
+boxIntersect (AABB aMin aMax) (AABB bMin bMax) =
+    aMax ^. _x > bMin ^. _x &&
+    aMin ^. _x < bMax ^. _x &&
+
+    aMax ^. _y > bMin ^. _y &&
+    aMin ^. _y < bMax ^. _y &&
+
+    aMax ^. _z > bMin ^. _z &&
+    aMin ^. _z < bMax ^. _z
 
 
 class Component3 c where
@@ -69,8 +88,6 @@ instance Component3 Normal3 where
   setC1 (Normal3 _ c2 c3) c1 = Normal3 c1 c2 c3
   setC2 (Normal3 c1 _ c3) c2 = Normal3 c1 c2 c3
   setC3 (Normal3 c1 c2 _) c3 = Normal3 c1 c2 c3
-
-
 
 _x :: (Component3 c) => Lens (c a) (c a) a a
 _x inj comp = setC1 comp <$> inj (viewC1 comp)
@@ -113,6 +130,9 @@ vertex3f = Vertex3
 vector3f :: GLf -> GLf -> GLf -> Vector3 GLf
 vector3f = Vector3
 
+normal3f :: GLf -> GLf -> GLf -> Normal3 GLf
+normal3f = Normal3
+
 color4f :: GLf -> GLf -> GLf -> GLf -> Color4 GLf
 color4f = Color4
 
@@ -137,3 +157,4 @@ color4f_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
   | otherwise               = Color4 0.45 1.2 0.2 1.0
   where hexify = fst . head . readHex
 color4f_ _              = Color4 0.45 1.2 0.2 1.0
+

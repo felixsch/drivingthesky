@@ -6,7 +6,7 @@ module Game
   , status
   , state
   , input
-  , ship, road, speed
+  , ship, road, speed, currentBlock
   , Input(..)
   , ioUp, ioDown, ioRight, ioLeft, ioJump, ioEsc
   , drivingthesky
@@ -32,7 +32,8 @@ data GameStatus = Running
 
 data GameState = Playing     { _ship   :: Vector3 GLf
                              , _road   :: !Road
-                             , _speed  :: !GLf }
+                             , _speed  :: !GLf 
+                             , _currentBlock :: Maybe (AABB, Block) }
                | Paused      {}
                | Menu        {}
                | LevelSelect {}
@@ -83,19 +84,21 @@ playGame = proc i -> do
   movY  <- integral <<^ calcY -< i
   z     <- accumHoldBy (-) 0.0 -< Event speed
 
+
   returnA -< Game { _input  = i
                   , _status = Running
                   , _state  = Playing { _ship  = Vector3 movX
                                                          movY
                                                          z
                                       , _road  = testRoad
-                                      , _speed = (toGLf speed) } }
+                                      , _speed = (toGLf speed)
+                                      , _currentBlock = getBlockAt testRoad (Vector3 movX movY z) }}
   where
       speed' :: Input -> GLf
       speed' i    = (i ^. ioUp - i ^. ioDown) * accel
       calcSpeed i = if speed' i > 0 then speed' i else 0
 
       calcX :: Input -> GLf
-      calcX i            = (i ^. ioLeft- i ^. ioRight) * movementPerStep
+      calcX i = (i ^. ioLeft- i ^. ioRight) * movementPerStep
       calcY :: Input -> GLf
-      calcY i            = 0.0 
+      calcY i = 0.0 
