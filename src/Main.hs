@@ -9,6 +9,7 @@ import Control.Lens
 import FRP.Yampa.GLFW
 
 import Render
+import State
 import Game
 import Resource
 

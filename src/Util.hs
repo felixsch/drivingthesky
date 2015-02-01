@@ -9,6 +9,10 @@ module Util
   , vertex3f
   , vector3f
   , normal3f
+  , Vertex3(..)
+  , Vector3(..)
+  , Normal3(..)
+  , Color4(..)
   , color4f
   , color4f_
   , vert3

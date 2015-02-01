@@ -32,6 +32,7 @@ executable drivingthesky
                      , Resource
                      , Render
                      , Globals
+                     , Entity
                        Util
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.8

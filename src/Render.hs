@@ -16,10 +16,12 @@ import Data.Foldable
 import Data.Maybe
 
 import Util
+import State
 import Game
 import Road
 import Resource
 import Globals
+import Entity
 
 
 render :: GameStatus -> GLFW.Window -> Game -> Resources -> IO Bool

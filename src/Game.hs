@@ -1,15 +1,6 @@
 {-# LANGUAGE TemplateHaskell, Arrows, BangPatterns #-}
 module Game 
-  ( GameStatus(..)
-  , GameState(..)
-  , Game(..)
-  , status
-  , state
-  , input
-  , ship, road, speed, currentBlock
-  , Input(..)
-  , ioUp, ioDown, ioRight, ioLeft, ioJump, ioEsc
-  , drivingthesky
+  ( drivingthesky
   ) where
 
 import Control.Lens
@@ -22,42 +13,7 @@ import FRP.Yampa.GLFW
 import Util
 import Road
 import Globals
-
-data GameStatus = Running
-                | Pause
-                | MainMenu
-                | SelectLevel
-                | Quit
-                deriving (Show, Eq)
-
-data GameState = Playing     { _ship   :: Vector3 GLf
-                             , _road   :: !Road
-                             , _speed  :: !GLf 
-                             , _currentBlock :: Maybe (AABB, Block) }
-               | Paused      {}
-               | Menu        {}
-               | LevelSelect {}
-
-
-data Input = Input { _ioUp :: !GLf
-                   , _ioDown :: !GLf
-                   , _ioLeft :: !GLf
-                   , _ioRight :: !GLf
-                   , _ioJump :: !GLf
-                   , _ioEsc      :: !Bool }
-                   deriving (Show)
-
-neutralInput :: Input
-neutralInput = Input 0.0 0.0 0.0 0.0 0.0 False
-
-data Game = Game { _input  :: Input 
-                 , _status :: GameStatus
-                 , _state  :: GameState }
-
-makeLenses ''GameState
-makeLenses ''Input
-makeLenses ''Game
-
+import State
 
 
 collectInput :: SF (Event GLFW) Input
