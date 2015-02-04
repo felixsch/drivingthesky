@@ -4,8 +4,11 @@ module State where
 
 import Control.Lens
 
+import Ship
 import Util
 import Road
+import Input
+import Entity
     
 data Game = Game { _input  :: Input 
                  , _status :: GameStatus
@@ -18,7 +21,7 @@ data GameStatus = Running
                 | Quit
                 deriving (Show, Eq)
 
-data GameState = Playing     { _ship   :: Vector3 GLf
+data GameState = Playing     { _ship   :: Object Ship
                              , _road   :: !Road
                              , _speed  :: !GLf 
                              , _currentBlock :: Maybe (AABB, Block) }
@@ -27,16 +30,5 @@ data GameState = Playing     { _ship   :: Vector3 GLf
                | LevelSelect {}
 
 
-data Input = Input { _ioUp :: !GLf
-                   , _ioDown :: !GLf
-                   , _ioLeft :: !GLf
-                   , _ioRight :: !GLf
-                   , _ioJump :: !GLf
-                   , _ioEsc      :: !Bool }
-                   deriving (Show)
-
-
-
 makeLenses ''GameState
-makeLenses ''Input
 makeLenses ''Game

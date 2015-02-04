@@ -54,7 +54,7 @@ main = do
 
 
     runGLFW window resize (\game -> 
-        render (game ^. status) window game =<< updateResources res game) drivingthesky 
+        renderScene (game ^. status) window game =<< updateResources res game) drivingthesky 
 
     GLFW.destroyWindow window
 

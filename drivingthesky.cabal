@@ -32,6 +32,9 @@ executable drivingthesky
                      , Resource
                      , Render
                      , Globals
+                     , Input
+                     , Ship
+                     , State
                      , Entity
                        Util
   -- other-extensions:    

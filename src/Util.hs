@@ -23,10 +23,13 @@ module Util
   , boxIntersect 
   
   , Component3(..)
+  , toVertex
 
   , _x
   , _y
   , _z
+
+  , abZero
 
   ) where
 
@@ -106,6 +109,12 @@ whenM :: (Monad m) => m (Maybe a) -> (a -> m ()) -> m ()
 whenM s f = maybe (return ()) f =<< s
 
 
+abZero :: GLf -> GLf
+abZero x
+  | x > 0.0   = x
+  | otherwise = 0.0
+
+
 type GLf = GLfloat
 type Alpha = GLf
 
@@ -127,6 +136,9 @@ instance VectorSpace GLf GLf where
   x1 ^-^ x2      = x1 - x2
   x1 `dot` x2    = x1 * x2
 
+
+toVertex :: (Component3 c) => c a -> Vertex3 a
+toVertex x = Vertex3 (x ^. _x) (x ^. _y) (x ^. _z)
 
 vertex3f :: GLf -> GLf -> GLf -> Vertex3 GLf
 vertex3f = Vertex3

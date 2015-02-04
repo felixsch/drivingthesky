@@ -14,26 +14,19 @@ import Util
 import Road
 import Globals
 import State
+import Ship
+import Input
+import Entity
 
-
-collectInput :: SF (Event GLFW) Input
-collectInput = proc i -> do
-  keyDown      <- keyPress         -< i
-  up           <- countK Key'Up    -< keyDown
-  down         <- countK Key'Down  -< keyDown
-  right        <- countK Key'Right -< keyDown
-  left         <- countK Key'Left  -< keyDown
-  jump         <- countK Key'Space -< keyDown
-
-  returnA -< Input up down right left jump False
-  where
-      countK k = key k >>^ event 0.0 (\_ -> 1.0) 
 
 drivingthesky :: SF (Event GLFW) Game
 drivingthesky = collectInput >>> playGame
 
+
 playGame :: SF Input Game
 playGame = proc i -> do
+
+  ship  <- update -< i
 
   speed <- integral <<^ calcSpeed -< i
   movX  <- integral <<^ calcX -< i
@@ -43,9 +36,7 @@ playGame = proc i -> do
 
   returnA -< Game { _input  = i
                   , _status = Running
-                  , _state  = Playing { _ship  = Vector3 movX
-                                                         movY
-                                                         z
+                  , _state  = Playing { _ship  = ship
                                       , _road  = testRoad
                                       , _speed = (toGLf speed)
                                       , _currentBlock = getBlockAt testRoad (Vector3 movX movY z) }}

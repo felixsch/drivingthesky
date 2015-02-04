@@ -1,5 +1,5 @@
 module Render
-  ( render
+  ( renderScene
   , roadShunk
   ) where
 
@@ -22,10 +22,11 @@ import Road
 import Resource
 import Globals
 import Entity
+import Ship
 
 
-render :: GameStatus -> GLFW.Window -> Game -> Resources -> IO Bool
-render status
+renderScene :: GameStatus -> GLFW.Window -> Game -> Resources -> IO Bool
+renderScene status
   | status == Running    = renderGame
   | status == Pause      = renderPause
   | status == MainMenu   = renderMainMenu
@@ -67,6 +68,8 @@ renderAABB :: String -> AABB -> IO ()
 renderAABB c (AABB p1 p2) = do
     color $ color4f_ c
     renderPrimitive Lines $ do
+
+
         vert3 p1x p1y p1z
         vert3 p1x p1y p2z
 
@@ -76,11 +79,32 @@ renderAABB c (AABB p1 p2) = do
         vert3 p1x p2y p2z
         vert3 p1x p2y p1z
 
-        vert3 p1x p2y p2z
-        vert3 p2x p2y p1z
+        vert3 p1x p2y p1z
+        vert3 p1z p1y p1z
 
         vert3 p1x p1y p1z
         vert3 p2x p1y p1z
+
+        vert3 p1x p2y p1z
+        vert3 p2x p2y p1z
+
+        vert3 p2x p1y p1z
+        vert3 p2x p2y p1z
+
+        vert3 p2x p2y p1z
+        vert3 p2x p2y p2z
+
+        vert3 p2x p2y p2z
+        vert3 p2x p1y p2z
+
+        vert3 p2x p1y p2z
+        vert3 p2x p1y p1z
+
+        vert3 p2x p1y p2z
+        vert3 p1x p1z p2z
+
+        vert3 p2x p2y p2z
+        vert3 p2x p2y p2z
 
   where
       p1x = p1 ^. _x
@@ -202,6 +226,7 @@ drawShip = do
     x = 1.0
     z = 4.0
     y = 0.2
+    shipSize = 0.15 :: GLf
     --i = x - 0.3      -- inner wing x
     --iz = 0.4     -- inner wing z
     --i2 = x - 0.1 -- wing back x
@@ -239,7 +264,8 @@ renderGame win game res = do
     lookAt eye view (Vector3 0.0 1.0 0.0)
     putStrLn $ "start rendering with blockrow = " ++ show start
     renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
-    renderShip ship'
+    render ship' game
+    renderAABB "#ff0000" (aabb ship')
    
     get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
 
@@ -251,12 +277,12 @@ renderGame win game res = do
   where
       road'  = game ^. state ^?! road
       ship'  = game ^. state ^?! ship
+      shipPos = ship' ^. pos
       eye :: Vertex3 GLdouble
-      eye    = Vertex3 0.0 1.4 $ realToFrac (ship' ^. _z + 3.6)
-      view   = Vertex3 0.0 2.0 $ realToFrac ((-10) + ship' ^. _z)
+      eye    = Vertex3 0.0 1.4 $ realToFrac (shipPos ^. _z + 3.6)
+      view   = Vertex3 0.0 2.0 $ realToFrac ((-10) + shipPos ^. _z)
       length_ = S.length $ road' ^. roadDef
-      start   = round $ ab (((-1) * ship' ^. _z - blockHeight) / blockHeight)
-      ab  x   = if x >= 0 then x else 0
+      start   = round $ abZero (((-1) * shipPos ^. _x - blockHeight) / blockHeight)
 
 
 renderPause :: GLFW.Window -> Game -> Resources -> IO Bool

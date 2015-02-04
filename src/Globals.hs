@@ -3,7 +3,7 @@ module Globals
   , blockWidth, blockHeight
   , movementPerStep
   , accel
-  , shipSize
+  , earth
   ) where
 
 import Util
@@ -27,6 +27,8 @@ movementPerStep = 10.0
 accel :: GLf
 accel = 0.3
 
-shipSize :: GLf
-shipSize = 0.15
+earth :: GLf
+earth = 0.001
+
+
 

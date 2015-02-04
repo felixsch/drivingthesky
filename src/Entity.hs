@@ -1,19 +1,44 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Entity where
 
-
+import Control.Lens
 import FRP.Yampa
 
 import Util
-import State
+import Input
+import {-# SOURCE #-} State
+
+
+
+data Object a = Object { _pos :: Vector3 GLf
+                       , _velo :: Vector3 GLf
+                       , _obj   :: a }
+    deriving (Show)
+
+makeLenses ''Object
+
+data Status a  = Alive (Object a)
+               | Dead
+    deriving (Show)
+
+alive :: Object a -> Status a
+alive = Alive
+
+dead :: Object a -> Status a
+dead _ = Dead
+
+whenAlive :: (Monad m) => Status a -> (Object a -> m ()) -> m ()
+whenAlive (Alive obj) f = f obj
+whenAlive Dead _        = return ()
+
 
 class Entity a where
-    renderEntity  :: a -> Game -> m ()
-    updateEntity  :: SF (a, Game) (a, Game)
-    entityGetAABB :: a -> AABB
+    update     :: SF Input (Object a)
+    canCollide :: a -> Bool
+    aabb       :: Object a -> AABB
+    collide    :: (Entity b) => SF (Object b, Object a) (Status b, Status a)
 
-
-class Moveable a where
-    move :: Game -> SF a a
-    
-
+class Renderable a where
+    render :: Object a -> Game -> IO ()
 
