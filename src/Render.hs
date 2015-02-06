@@ -80,7 +80,7 @@ renderAABB c (AABB p1 p2) = do
         vert3 p1x p2y p1z
 
         vert3 p1x p2y p1z
-        vert3 p1z p1y p1z
+        vert3 p1x p1y p1z
 
         vert3 p1x p1y p1z
         vert3 p2x p1y p1z
@@ -101,10 +101,10 @@ renderAABB c (AABB p1 p2) = do
         vert3 p2x p1y p1z
 
         vert3 p2x p1y p2z
-        vert3 p1x p1z p2z
+        vert3 p1x p1y p2z
 
         vert3 p2x p2y p2z
-        vert3 p2x p2y p2z
+        vert3 p1x p2y p2z
 
   where
       p1x = p1 ^. _x
@@ -255,14 +255,14 @@ renderGame win game res = do
     depthFunc $= Just Less
     loadIdentity
 
-    putStrLn $ "input  = " ++ show (game ^. input)
+    --putStrLn $ "input  = " ++ show (game ^. input)
     putStrLn $ "ship   = " ++ show (ship')
-    putStrLn $ "eye    = " ++ show eye
-    putStrLn $ "startP = " ++ show renderStartPos
-    putStrLn $ "blockS = (" ++ show blockWidth ++ ", " ++ show blockHeight ++ ")"
-    putStrLn $ "(aabb, block)  = " ++ show (game ^. state ^?! currentBlock)
+    --putStrLn $ "eye    = " ++ show eye
+    --putStrLn $ "startP = " ++ show renderStartPos
+    --putStrLn $ "blockS = (" ++ show blockWidth ++ ", " ++ show blockHeight ++ ")"
+    --putStrLn $ "(aabb, block)  = " ++ show (game ^. state ^?! currentBlock)
     lookAt eye view (Vector3 0.0 1.0 0.0)
-    putStrLn $ "start rendering with blockrow = " ++ show start
+    --putStrLn $ "start rendering with blockrow = " ++ show start
     renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
     render ship' game
     renderAABB "#ff0000" (aabb ship')

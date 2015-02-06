@@ -1,14 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Road
-  ( BlockColor
-  , BlockHeight
-  , BlockAlpha
-  , Block(..)
-  , Road(..)
-  , loadRoad
-  , getBlock
-  , getBlockAt
-  , testRoad
+module Road 
+  ( Road(..)
+  , loadRoadDefinition
+  , testRoadDefinition
   , roadBlocks
   , roadDef
   , roadName
@@ -26,43 +20,70 @@ import qualified Data.List as L
 import Graphics.Rendering.OpenGL
 import Util
 import Globals
+import Block
+import Entity
 
 
-type BlockColor  = String
-type BlockHeight = GLf
-type BlockAlpha  = GLf
+blocksPerLine :: GLf
+blocksPerLine = 7
 
-data Block  = Start BlockColor BlockHeight
-            | Block BlockColor BlockHeight
-            | EmptyBlock
-            | Goal BlockColor BlockHeight
-            deriving (Show, Read, Eq)
+roadStartX :: GLf
+roadStartX = -((blocksPerLine * blockWidth) / 2)
 
-data Road = Road { _roadName :: String
-                 , _roadBlocks :: M.Map Int Block
-                 , _roadDef :: S.Seq [Int] }
-                 deriving (Show, Read, Eq)
+
+
+data RoadDefinition = RoadDefinition { roadName   :: String
+                                     , roadBlocks :: M.Map Int Block
+                                     , roadDef    :: S.Seq [Int] }
+    deriving (Show, Read, Eq)
+
+data Road = Road { _blocks     :: S.Seq [Object Block]
+                 , _definition :: RoadDefinition }
 
 makeLenses ''Road
 
 
-loadRoad :: FilePath -> IO Road
-loadRoad path = read <$> readFile path
+loadRoadDefinition :: FilePath -> IO RoadDefinition
+loadRoadDefinition path = read <$> readFile path
 
 
-getBlockY :: Block -> GLf
-getBlockY (Start _ h) = h
-getBlockY (Block _ h) = h
-getBlockY (Goal _ h)  = h
+generateRoad :: RoadDefinition -> Maybe Road
+generateRoad def = do
+    blockRows <- buildBlockRows def (S.viewl (roadDef def)) 0
+    return $ Road blockRows def
+  where
+    boundCheckedIndex s i
+      | S.length s >= i = Just (S.index s i)
+      | otherwise       = Nothing
 
-getBlock :: Int -> Road -> Block
-getBlock b road = case getBlockType road b of
-   Just x  -> x
-   Nothing -> error $ "Failed to get block definition for blocktype: " ++ show b
+buildBlockRows :: RoadDefinition -> S.ViewL [Int] -> Int -> Maybe (S.Seq [Object Block])
+buildBlockRows def (S.EmptyL)   _  = Just $ empty
+buildBlocksRows def (x S.:< xs) i  = (S.<|) <$> buildRow def x 0 i <*> buildBlockRows def (S.viewl xs) (i+1)
+  where
+    buildRow def []     _ _ = Just []
+    buildRow def (x:xs) j i = (:) <$> (buildBlockObject def i j x) <*> buildRow def xs (j+1) i
 
-getBlockType :: Road -> Int -> Maybe Block
-getBlockType road i = M.lookup i (road ^. roadBlocks)
+buildBlockObject :: RoadDefinition -> Int -> Int -> Int -> Maybe (Object Block)
+buildBlockObject def i j typ = do
+    block <- getBlockType def typ
+    return (Object pos vNull block)
+  where
+    pos = Vector3 x 0.0 z
+    x   = roadStartX + (fromIntegral i * blockWidth)
+    z   = fromIntegral j * blockHeight
 
+getBlockType :: RoadDefinition -> Int -> Maybe Block
+getBlockType def i = M.lookup i (roadBlocks def)
+
+
+
+
+
+
+
+
+
+{-
 
 getBlockAt :: Road -> Vector3 GLf -> Maybe (AABB, Block)
 getBlockAt road (Vector3 x y z) = do
@@ -72,6 +93,8 @@ getBlockAt road (Vector3 x y z) = do
  where
     posZ = truncate $ abs $ z / blockHeight
     posX = 3 + (truncate $ x / blockWidth)
+
+
     
 getBlockNumber :: Road -> Int -> Int -> Maybe Int
 getBlockNumber road x z = findColumn x =<< findRow z (S.viewl $ road ^. roadDef)
@@ -94,20 +117,20 @@ getAABBFromBlock (x,z) block      = Just $ AABB minP maxP
      maxP = vertex3f (posX + blockHeight) (getBlockY block) (-(posZ + blockWidth))
      posX = renderStartPos + ((toGLf x) * blockHeight)
      posZ = (toGLf z) * blockWidth
- 
+-} 
 
 
-testRoad :: Road
-testRoad = Road
-  { _roadName = "Test Level"
-  , _roadBlocks = M.fromList 
+testRoadDefinition :: RoadDefinition
+testRoadDefinition = RoadDefinition
+  { roadName = "Test Level"
+  , roadBlocks = M.fromList 
     [ (0, EmptyBlock)
     , (1, Block "#2288FF" 0.2)
     , (2, Block "#11447F" 0.2)
     , (3, Block "#ff0000" 0.5)
     , (4, Start "#ffff00" 0.2)
     , (5, Goal  "#ff0000" 0.2) ]
-  , _roadDef = S.fromList
+  , roadDef = S.fromList
     [ [1,0,0,4,0,0,1]
     , [0,0,0,1,0,0,0]
     , [0,0,0,0,0,0,0]

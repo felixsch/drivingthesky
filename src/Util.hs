@@ -30,6 +30,7 @@ module Util
   , _z
 
   , abZero
+  , vNull
 
   ) where
 
@@ -113,6 +114,9 @@ abZero :: GLf -> GLf
 abZero x
   | x > 0.0   = x
   | otherwise = 0.0
+
+vNull :: Vector3 GLf
+vNull = Vector3 0.0 0.0 0.0
 
 
 type GLf = GLfloat

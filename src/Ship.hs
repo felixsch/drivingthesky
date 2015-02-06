@@ -14,7 +14,10 @@ import Graphics.Rendering.OpenGL
 
 
 shipSize :: Vector3 GLf
-shipSize = Vector3 0.2 0.1 2.0
+shipSize = Vector3 0.1 0.05 1.05
+
+accel :: GLf
+accel = 50
 
 data Ship = Ship { _health :: Int
                  , _fuel   :: Int }
@@ -76,8 +79,8 @@ renderShip (Object pos _ _) _ = do
 
     iz = 0.2 -- inner space
     x = shipSize ^. _x
-    z = shipSize ^. _y
-    y = shipSize ^. _z
+    z = shipSize ^. _z
+    y = shipSize ^. _y
 
 updateShip :: SF Input (Object Ship)
 updateShip = proc i -> do
@@ -86,21 +89,26 @@ updateShip = proc i -> do
 --    posY  <- accumHoldBy (-) 0.0 -< Event earth
     posZ  <- accumHoldBy (-) 0.0 -< Event speed
 
-    returnA -< Object (Vector3 posX 0.5 posZ) (Vector3 0.0 0.0 0.0) (Ship 100 100)
+    returnA -< Object (Vector3 (realToFrac posX) 0.5 posZ) (Vector3 0.0 0.0 0.0) (Ship 100 100)
 
   where
-    speedValue i = abZero (i ^. ioUp   - i ^. ioDown) * (accel / 2)
-    xValue     i = abZero (i ^. ioLeft - i ^. ioRight) * accel
+    speedValue :: Input -> GLf
+    speedValue i = abZero (i ^. ioUp   - i ^. ioDown) * (accel / 10)
+    xValue :: Input -> GLf
+    xValue     i = (i ^. ioLeft - i ^. ioRight) * accel
 
 
 
 shipGetAABB :: Object Ship -> AABB
-shipGetAABB (Object minPos@(Vector3 x y z) _ _) = AABB (toVertex minPos)
+shipGetAABB (Object minPos@(Vector3 x y z) _ _) = AABB (Vertex3 minX minY minZ)
                                                        (Vertex3 maxX maxY maxZ)
   where
+      minX = x - (shipSize ^. _x)
+      minY = y - (shipSize ^. _y)
+      minZ = z
       maxX = x + (shipSize ^. _x) 
       maxY = y + (shipSize ^. _y)
-      maxZ = z + (shipSize ^. _z)
+      maxZ = z - (shipSize ^. _z)
 
 
 shipOnCollision :: (Entity b) => SF (Object b, Object Ship) (Status b, Status Ship)

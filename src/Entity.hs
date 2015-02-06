@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, Arrows #-}
 
 module Entity where
 
@@ -38,6 +38,8 @@ class Entity a where
     canCollide :: a -> Bool
     aabb       :: Object a -> AABB
     collide    :: (Entity b) => SF (Object b, Object a) (Status b, Status a)
+    collide = proc (b,a) -> do
+        returnA -< (alive b, alive a)
 
 class Renderable a where
     render :: Object a -> Game -> IO ()
