@@ -1,8 +1,4 @@
-module Render
-  ( renderScene
-  , roadShunk
-  ) where
-
+module Render where
 import Control.Monad
 import Prelude hiding (foldr)
 import Control.Lens
@@ -23,6 +19,7 @@ import Resource
 import Globals
 import Entity
 import Ship
+import Block
 
 
 renderScene :: GameStatus -> GLFW.Window -> Game -> Resources -> IO Bool
@@ -31,7 +28,7 @@ renderScene status
   | status == Pause      = renderPause
   | status == MainMenu   = renderMainMenu
 
-
+{-
 roadShunk :: Int -> GameState -> S.Seq [Block]
 roadShunk start state = foldr buildRoad S.empty $
     S.drop start (road' ^. roadDef)
@@ -62,7 +59,7 @@ renderBlock (Block c h)  = drawNormalBlock c h
 renderBlock b            = drawNormalBlock "#ffff00" 0.2
 -- renderBlock b            = (putStrLn $ "Not implemented block: " ++ show b)
 --                           >> drawNormalBlock "#ffff00" 0.2
-
+-}
 
 renderAABB :: String -> AABB -> IO ()
 renderAABB c (AABB p1 p2) = do
@@ -116,7 +113,7 @@ renderAABB c (AABB p1 p2) = do
       p1z = p1 ^. _z
       p2z = p2 ^. _z
 
-
+{-
 drawNormalBlock :: String -> GLf -> IO ()
 drawNormalBlock c h = do
     color $ color4f_ c
@@ -150,7 +147,7 @@ drawNormalBlock c h = do
   where
       d = 0.0
       darken f (Color4 r g b a) = Color4 (r-f) (g-f) (b-f) a
-
+-}
 
 
 
@@ -263,8 +260,8 @@ renderGame win game res = do
     --putStrLn $ "(aabb, block)  = " ++ show (game ^. state ^?! currentBlock)
     lookAt eye view (Vector3 0.0 1.0 0.0)
     --putStrLn $ "start rendering with blockrow = " ++ show start
-    renderLevel start $ S.viewl $ roadShunk start (game ^. state) 
-    render ship' game
+    renderRoad start road'
+    render ship'
     renderAABB "#ff0000" (aabb ship')
    
     get errors >>= Prelude.mapM_ (\e -> putStrLn $ "GL Error: " ++ show e)
@@ -281,7 +278,6 @@ renderGame win game res = do
       eye :: Vertex3 GLdouble
       eye    = Vertex3 0.0 1.4 $ realToFrac (shipPos ^. _z + 3.6)
       view   = Vertex3 0.0 2.0 $ realToFrac ((-10) + shipPos ^. _z)
-      length_ = S.length $ road' ^. roadDef
       start   = round $ abZero (((-1) * shipPos ^. _x - blockHeight) / blockHeight)
 
 

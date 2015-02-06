@@ -22,9 +22,8 @@ data GameStatus = Running
                 deriving (Show, Eq)
 
 data GameState = Playing     { _ship   :: Object Ship
-                             , _road   :: !Road
-                             , _speed  :: !GLf 
-                             , _currentBlock :: Maybe (AABB, Block) }
+                             , _road   :: Road
+                             , _speed  :: !GLf }
                | Paused      {}
                | Menu        {}
                | LevelSelect {}

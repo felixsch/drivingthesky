@@ -44,7 +44,7 @@ data Resource = TextureR { resName :: String
                          , resTexture     :: Maybe Tex }
               | RoadR { resName :: String
                        , resPath :: FilePath
-                       , resRoad     :: Maybe Road }
+                       , resRoad     :: Maybe RoadDefinition }
               | ShaderR { resName :: String
                         , resShaderType :: ShaderType
                         , resPath :: FilePath
@@ -72,7 +72,7 @@ loadResource tex@(TextureR name path mTex)
   | otherwise     = TextureR name path . Just <$> loadTexture' path
 loadResource level@(RoadR name path mLevel)
   | isJust mLevel = return level
-  | otherwise     = RoadR name path . Just <$> loadRoad path
+  | otherwise     = RoadR name path . Just <$> loadRoadDefinition path
 loadResource shader@(ShaderR name typ path mShader)
   | isJust mShader = return shader
   | otherwise     = ShaderR name typ path . Just <$> loadShader typ path

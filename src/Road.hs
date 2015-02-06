@@ -1,12 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Road 
-  ( Road(..)
-  , loadRoadDefinition
-  , testRoadDefinition
-  , roadBlocks
-  , roadDef
-  , roadName
-  ) where
+module Road where
 
 import Control.Applicative
 import Control.Lens
@@ -17,6 +10,7 @@ import qualified Data.Foldable as F
 import qualified Data.List as L
 
 
+import {-# SOURCE #-} State
 import Graphics.Rendering.OpenGL
 import Util
 import Globals
@@ -39,6 +33,7 @@ data RoadDefinition = RoadDefinition { roadName   :: String
 
 data Road = Road { _blocks     :: S.Seq [Object Block]
                  , _definition :: RoadDefinition }
+                 deriving (Show)
 
 makeLenses ''Road
 
@@ -58,22 +53,28 @@ generateRoad def = do
 
 buildBlockRows :: RoadDefinition -> S.ViewL [Int] -> Int -> Maybe (S.Seq [Object Block])
 buildBlockRows def (S.EmptyL)   _  = Just $ empty
-buildBlocksRows def (x S.:< xs) i  = (S.<|) <$> buildRow def x 0 i <*> buildBlockRows def (S.viewl xs) (i+1)
+buildBlockRows def (x S.:< xs) i  = (S.<|) <$> buildRow def x 0 i <*> buildBlockRows def (S.viewl xs) (i+1)
   where
     buildRow def []     _ _ = Just []
-    buildRow def (x:xs) j i = (:) <$> (buildBlockObject def i j x) <*> buildRow def xs (j+1) i
+    buildRow def (x:xs) j i = (++) <$> (buildBlockObject def i j x) <*> buildRow def xs (j+1) i
 
-buildBlockObject :: RoadDefinition -> Int -> Int -> Int -> Maybe (Object Block)
-buildBlockObject def i j typ = do
-    block <- getBlockType def typ
-    return (Object pos vNull block)
+buildBlockObject :: RoadDefinition -> Int -> Int -> Int -> Maybe [Object Block]
+buildBlockObject def i j typ = Just $ maybe [] (\x -> [Object pos vNull x]) $ getBlockType def typ
   where
     pos = Vector3 x 0.0 z
     x   = roadStartX + (fromIntegral i * blockWidth)
-    z   = fromIntegral j * blockHeight
+    z   = - (fromIntegral j * blockHeight)
 
 getBlockType :: RoadDefinition -> Int -> Maybe Block
-getBlockType def i = M.lookup i (roadBlocks def)
+getBlockType def i = filterEmpty =<< M.lookup i (roadBlocks def)
+  where
+      filterEmpty EmptyBlock   = Nothing
+      filterEmpty x            = Just x
+
+renderRoad :: Int -> Road -> IO ()
+renderRoad i road = mapM_ render $ F.foldl (++) [] subset
+  where
+    subset = S.drop i (road ^. blocks)
 
 
 

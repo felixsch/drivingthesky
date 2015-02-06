@@ -26,15 +26,14 @@ executable drivingthesky
   main-is:             Main.hs
   other-modules:       Paths_drivingthesky
                      , FRP.Yampa.GLFW
+                     , State
                      , Audio
                      , Road
                      , Game
                      , Resource
                      , Render
-                     , Globals
                      , Input
                      , Ship
-                     , State
                      , Entity
                        Util
   -- other-extensions:    

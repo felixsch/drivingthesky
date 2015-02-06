@@ -7,7 +7,6 @@ import FRP.Yampa
 import Entity
 import Util
 import Input
-import {-# SOURCE #-} State
 import Globals
 
 import Graphics.Rendering.OpenGL
@@ -40,8 +39,8 @@ instance Entity Ship where
     collide      = shipOnCollision
 
 
-renderShip :: Object Ship -> Game -> IO ()
-renderShip (Object pos _ _) _ = do
+renderShip :: Object Ship -> IO ()
+renderShip (Object pos _ _) = do
   preservingMatrix $ do
     translate pos
     renderPrimitive Triangles $ do

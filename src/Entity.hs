@@ -7,7 +7,6 @@ import FRP.Yampa
 
 import Util
 import Input
-import {-# SOURCE #-} State
 
 
 
@@ -42,5 +41,5 @@ class Entity a where
         returnA -< (alive b, alive a)
 
 class Renderable a where
-    render :: Object a -> Game -> IO ()
+    render :: Object a -> IO ()
 

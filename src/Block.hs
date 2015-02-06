@@ -4,11 +4,8 @@ import FRP.Yampa
 
 import Graphics.Rendering.OpenGL
 
-
-
 import Util
 import Entity
-import {-# SOURCE #-} State
 
 type BlockColor  = String
 type BlockHeight = GLf
@@ -34,6 +31,11 @@ blockGetHeight (EmptyBlock) = 0.0
 blockGetHeight (Goal _ h)   = h
 
 
+isEmptyBlock :: Block -> Bool
+isEmptyBlock (EmptyBlock) = True
+isEmptyBlock _            = False
+
+
 
 
 instance Entity Block where
@@ -57,9 +59,9 @@ blockAABB (Object pos@(Vector3 x y z) _ block) = AABB (toVertex pos)
     maxZ = z - blockHeight
 
 
-blockRender :: Object Block -> Game -> IO ()
-blockRender (Object pos _ (Block color height)) _ = renderBasicBlock pos color height
-blockRender (Object pos _ _                   ) _ = renderBasicBlock pos "#ffff00" 0.2
+blockRender :: Object Block -> IO ()
+blockRender (Object pos _ (Block color height)) = renderBasicBlock pos color height
+blockRender (Object pos _ _                   ) = renderBasicBlock pos "#ffff00" 0.2
 
 
 renderBasicBlock :: Vector3 GLf -> String -> GLf -> IO ()
