@@ -20,8 +20,9 @@ module Util
   , col4
 
   , AABB(..)
-  , boxIntersect 
-  
+  , boxIntersect
+  , renderAABB
+
   , Component3(..)
   , toVertex
 
@@ -59,6 +60,60 @@ boxIntersect (AABB aMin aMax) (AABB bMin bMax) =
 
     aMax ^. _z > bMin ^. _z &&
     aMin ^. _z < bMax ^. _z
+
+renderAABB :: String -> AABB -> IO ()
+renderAABB c (AABB p1 p2) = do
+    color $ color4f_ c
+    renderPrimitive Lines $ do
+
+
+        vert3 p1x p1y p1z
+        vert3 p1x p1y p2z
+
+        vert3 p1x p1y p2z
+        vert3 p1x p2y p2z
+
+        vert3 p1x p2y p2z
+        vert3 p1x p2y p1z
+
+        vert3 p1x p2y p1z
+        vert3 p1x p1y p1z
+
+        vert3 p1x p1y p1z
+        vert3 p2x p1y p1z
+
+        vert3 p1x p2y p1z
+        vert3 p2x p2y p1z
+
+        vert3 p2x p1y p1z
+        vert3 p2x p2y p1z
+
+        vert3 p2x p2y p1z
+        vert3 p2x p2y p2z
+
+        vert3 p2x p2y p2z
+        vert3 p2x p1y p2z
+
+        vert3 p2x p1y p2z
+        vert3 p2x p1y p1z
+
+        vert3 p2x p1y p2z
+        vert3 p1x p1y p2z
+
+        vert3 p2x p2y p2z
+        vert3 p1x p2y p2z
+
+  where
+      p1x = p1 ^. _x
+      p2x = p2 ^. _x
+
+      p1y = p1 ^. _y
+      p2y = p2 ^. _y
+
+      p1z = p1 ^. _z
+      p2z = p2 ^. _z
+
+
 
 
 class Component3 c where

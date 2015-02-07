@@ -56,14 +56,14 @@ buildBlockRows def (S.EmptyL)   _  = Just $ empty
 buildBlockRows def (x S.:< xs) i  = (S.<|) <$> buildRow def x 0 i <*> buildBlockRows def (S.viewl xs) (i+1)
   where
     buildRow def []     _ _ = Just []
-    buildRow def (x:xs) j i = (++) <$> (buildBlockObject def i j x) <*> buildRow def xs (j+1) i
+    buildRow def (x:xs) j i = (++) <$> buildRow def xs (j+1) i <*> (buildBlockObject def i j x) 
 
 buildBlockObject :: RoadDefinition -> Int -> Int -> Int -> Maybe [Object Block]
 buildBlockObject def i j typ = Just $ maybe [] (\x -> [Object pos vNull x]) $ getBlockType def typ
   where
     pos = Vector3 x 0.0 z
-    x   = roadStartX + (fromIntegral i * blockWidth)
-    z   = - (fromIntegral j * blockHeight)
+    x   = roadStartX + (fromIntegral j * blockWidth)
+    z   = - (fromIntegral i * blockHeight)
 
 getBlockType :: RoadDefinition -> Int -> Maybe Block
 getBlockType def i = filterEmpty =<< M.lookup i (roadBlocks def)
@@ -72,9 +72,10 @@ getBlockType def i = filterEmpty =<< M.lookup i (roadBlocks def)
       filterEmpty x            = Just x
 
 renderRoad :: Int -> Road -> IO ()
-renderRoad i road = mapM_ render $ F.foldl (++) [] subset
+renderRoad i road = mapM_ render' $ F.foldl (++) [] subset
   where
     subset = S.drop i (road ^. blocks)
+    render' obj = render obj >> renderAABB "#fafaff" (aabb obj)
 
 
 
