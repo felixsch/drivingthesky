@@ -8,6 +8,7 @@ import Entity
 import Util
 import Input
 import Globals
+import Block
 
 import Graphics.Rendering.OpenGL
 
@@ -18,16 +19,13 @@ shipSize = Vector3 0.1 0.05 1.05
 accel :: GLf
 accel = 50
 
-data Ship = Ship { _health :: Int
-                 , _fuel   :: Int }
+data Ship = Ship { _hasWon :: Bool
+                 , _isDead :: Bool
+                 , _startPosition :: Int }
             deriving (Show)
 
 makeLenses ''Ship
 
-newShip :: Object Ship
-newShip = Object (Vector3 0.0 0.0 0.0)
-                 (Vector3 0.0 0.0 0.0)
-                 (Ship 100 100)
 
 instance Renderable Ship where
     render = renderShip
@@ -36,7 +34,6 @@ instance Entity Ship where
     update       = updateShip
     canCollide _ = True
     aabb         = shipGetAABB
-    collide      = shipOnCollision
 
 
 renderShip :: Object Ship -> IO ()
@@ -88,7 +85,10 @@ updateShip = proc i -> do
 --    posY  <- accumHoldBy (-) 0.0 -< Event earth
     posZ  <- accumHoldBy (-) 0.0 -< Event speed
 
-    returnA -< Object (Vector3 (realToFrac posX) 0.5 posZ) (Vector3 0.0 0.0 0.0) (Ship 100 100)
+    shipObject <- checkBounds -< Object (Vector3 posX 0.5 posZ) vNull (Ship False False (start posZ))
+    returnA -< shipObject
+
+--    returnA -< Object (Vector3 (realToFrac posX) 0.5 posZ) (Vector3 0.0 0.0 0.0) (Ship 100 100)
 
   where
     speedValue :: Input -> GLf
@@ -96,6 +96,20 @@ updateShip = proc i -> do
     xValue :: Input -> GLf
     xValue     i = (i ^. ioLeft - i ^. ioRight) * accel
 
+    start z = round $ abZero (((-1) * z - blockHeight) / blockHeight)
+
+
+
+checkBounds :: SF (Object Ship) (Object Ship)
+checkBounds = arr $ \o ->
+    o & obj .  isDead .~ outOfBounds (o ^. pos)
+  where
+      outOfBounds (Vector3 x y _)
+        | x < (-3.5) || x > 3.5 = True
+        | y < (-2.0)            = True
+        | otherwise             = False
+
+  
 
 
 shipGetAABB :: Object Ship -> AABB
@@ -108,9 +122,3 @@ shipGetAABB (Object minPos@(Vector3 x y z) _ _) = AABB (Vertex3 minX minY minZ)
       maxX = x + (shipSize ^. _x) 
       maxY = y + (shipSize ^. _y)
       maxZ = z - (shipSize ^. _z)
-
-
-shipOnCollision :: (Entity b) => SF (Object b, Object Ship) (Status b, Status Ship)
-shipOnCollision = proc (other, ship) -> do
-    returnA -< (alive other, alive ship)
-

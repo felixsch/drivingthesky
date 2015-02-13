@@ -76,7 +76,10 @@ renderRoad i road = mapM_ render' $ F.foldl (++) [] subset
   where
     subset = S.drop i (road ^. blocks)
     render' obj = render obj >> renderAABB "#fafaff" (aabb obj)
+    
 
+intersectingBlocks :: AABB -> S.Seq [Object Block] -> [Object Block]
+intersectingBlocks ship = filter (boxIntersect ship . aabb ) . F.foldr (++) []
 
 
 
