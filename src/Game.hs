@@ -38,7 +38,9 @@ playGame = proc i -> do
   speed <- integral <<^ calcSpeed -< i
   z     <- accumHoldBy (-) 0.0 -< Event speed
 
-  ship'' <- runCollision (collidingBlocks ship') withBlock -< ship
+     
+  ship'' <- collide' withBlock -< (ship', collidingBlocks ship')
+
 
   returnA -< Game { _input  = i
                   , _status = Running
@@ -52,23 +54,14 @@ playGame = proc i -> do
       collidingBlocks ship = intersectingBlocks (aabb ship) (testRoad ^. blocks)
 
 
-    
 
-runCollision :: (SF (Object b, Object Ship) (Object Ship)) -> SF ([Object b], Object Ship) (Object Ship)
+collide' :: (Entity b) => (Object b -> Object Ship -> Object Ship)
+         -> SF (Object Ship, [Object b]) (Object Ship)
+collide' f = arr $ \(ship, objs) -> foldr f ship objs
+ 
 
-
-
-
-
-runCollision []     f = arr id
-runCollision (x:xs) f = proc ship -> do
-    new <- f -< (x, ship)
-    returnA -< new
-  
-
-
-withBlock :: SF (Object Block, Object Ship) (Object Ship)
-withBlock  = arr $ \(block, ship) -> check ship (aabb block) block
+withBlock :: Object Block -> Object Ship -> Object Ship
+withBlock block ship = check ship (aabb block) block
   where
       check (Object sp sv ship) (AABB bmin bmax) (Object _ _ (Block _ _))
         | sv ^. _y < 0 && sp ^. _y > bmax ^. _y = Object (sp & _y .~ bmax ^. _y) sv ship
