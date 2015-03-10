@@ -66,6 +66,10 @@ withBlock block ship = check ship (aabb block) block
       check (Object sp sv ship) (AABB bmin bmax) (Object _ _ (Block _ _))
         | sv ^. _y < 0 && sp ^. _y > bmax ^. _y = Object (sp & _y .~ bmax ^. _y) sv ship
         | otherwise = Object sp sv ship
+      check (Object sp sv ship) (AABB bmin bmax) (Object _ _ (Start _ _))
+        | sv ^. _y < 0 && sp ^. _y > bmax ^. _y = Object (sp & _y .~ (bmax ^. _y + 0.5)) sv ship
+        | otherwise = Object sp sv ship
+      check ship _ _ = ship
 
 
 

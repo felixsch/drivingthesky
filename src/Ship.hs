@@ -82,15 +82,16 @@ updateShip :: SF Input (Object Ship)
 updateShip = proc i -> do
     speed <- integral <<^ speedValue -< i
     posX  <- integral <<^ xValue -< i
-    posY  <- accumHoldBy (-) 0.5 -< Event 0.009
+    posY  <- accumHoldBy (-) 0.7 -< Event 0.00005
     posZ  <- accumHoldBy (-) 0.0 -< Event speed
 
-    shipObject <- checkBounds -< Object (Vector3 posX posY posZ) vNull (Ship False False (start posZ))
+    shipObject <- checkBounds -< Object (Vector3 posX posY posZ) velocity (Ship False False (start posZ))
     returnA -< shipObject
 
 --    returnA -< Object (Vector3 (realToFrac posX) 0.5 posZ) (Vector3 0.0 0.0 0.0) (Ship 100 100)
 
   where
+    velocity = Vector3 0.0 (-1.0) 0.0
     speedValue :: Input -> GLf
     speedValue i = abZero (i ^. ioUp   - i ^. ioDown) * (accel / 10)
     xValue :: Input -> GLf

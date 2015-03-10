@@ -58,8 +58,8 @@ boxIntersect (AABB aMin aMax) (AABB bMin bMax) =
     aMax ^. _y > bMin ^. _y &&
     aMin ^. _y < bMax ^. _y &&
 
-    aMax ^. _z > bMin ^. _z &&
-    aMin ^. _z < bMax ^. _z
+    aMax ^. _z < bMin ^. _z &&
+    aMin ^. _z > bMax ^. _z
 
 renderAABB :: String -> AABB -> IO ()
 renderAABB c (AABB p1 p2) = do
