@@ -2,22 +2,24 @@
 import Control.Monad
 
 import Graphics.Rendering.OpenGL
-import qualified Graphics.UI.GLFW as GLFW
+import Graphics.UI.GLFW
 
 import Control.Lens
 
-import FRP.Yampa.GLFW
-
-import Render
-import State
-import Game
-import Resource
+import Data.IORef
 
 import Paths_drivingthesky
+import DTS
+import Input
+import Entity
+import Road
+import Util
+import Block
+
+import Player
 
 
-
-resize :: GLFW.Window -> Int -> Int -> IO ()
+resize :: Window -> Int -> Int -> IO ()
 resize _ w h = do
     viewport   $= (Position 0 0, Size (fromIntegral w) (fromIntegral h))
     matrixMode $= Projection
@@ -32,31 +34,35 @@ resize _ w h = do
     putStrLn "Resize..."
 
 
-updateResources :: Resources -> Game -> IO Resources
-updateResources res st = return res
+--updateResources :: Resources -> Game -> IO Resources
+--updateResources res st = return res
 
 
 main :: IO ()
 main = do
 
     path  <- getDataDir
-    res   <- initResources path
-
-
-    hasInit <- GLFW.init
+    --res   <- initResources path
+    close <- newIORef False
+    
+    hasInit <- Graphics.UI.GLFW.init
 
     unless hasInit $ error "Could not intialize GLFW"
 
-    GLFW.setErrorCallback $ Just (\_ err -> putStrLn $ "GLFW ERROR: " ++ err)
-    m@(Just window) <- GLFW.createWindow 1376 786 "DrivingTheSky!" Nothing Nothing
-    GLFW.makeContextCurrent m
+    setErrorCallback $ Just (\_ err -> putStrLn $ "GLFW ERROR: " ++ err)
+
+    m@(Just window) <- createWindow 1376 786 "DrivingTheSky!" Nothing Nothing
+
+    setWindowCloseCallback window (Just $ \_ -> void $ writeIORef close True)
+    setWindowSizeCallback  window (Just $ resize)
+ 
+    makeContextCurrent m
+
     resize window 1376 786
 
+    -- run netwire
 
-    runGLFW window resize (\game -> 
-        renderScene (game ^. status) window game =<< updateResources res game) drivingthesky 
-
-    GLFW.destroyWindow window
+    destroyWindow window
 
     putStrLn "bye!"
 

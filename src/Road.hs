@@ -10,10 +10,7 @@ import qualified Data.Foldable as F
 import qualified Data.List as L
 
 
-import {-# SOURCE #-} State
-import Graphics.Rendering.OpenGL
 import Util
-import Globals
 import Block
 import Entity
 
@@ -38,12 +35,13 @@ data Road = Road { _blocks     :: S.Seq [Object Block]
 makeLenses ''Road
 
 
+
 loadRoadDefinition :: FilePath -> IO RoadDefinition
 loadRoadDefinition path = read <$> readFile path
 
 
-generateRoad :: RoadDefinition -> Maybe Road
-generateRoad def = do
+mkRoad :: RoadDefinition -> Maybe Road
+mkRoad def = do
     blockRows <- buildBlockRows def (S.viewl (roadDef def)) 0
     return $ Road blockRows def
   where

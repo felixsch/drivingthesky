@@ -18,7 +18,7 @@ import Road
 import Resource
 import Globals
 import Entity
-import Ship
+import Player
 import Block
 
 

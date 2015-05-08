@@ -43,8 +43,6 @@ import Unsafe.Coerce
 import Numeric (readHex)
 import Data.Char (isHexDigit)
 
-import FRP.Yampa
-
 
 data AABB = AABB { pMin :: Vertex3 GLf
                  , pMax :: Vertex3 GLf }
@@ -182,18 +180,6 @@ toGLf = unsafeCoerce
 
 fromGLf :: GLf -> a
 fromGLf = unsafeCoerce
-
-
-instance VectorSpace GLf GLf where
-  zeroVector     = 0
-  negateVector x = -x
-
-  a *^ x         = a * x
-  x ^/ a         = x / a
-
-  x1 ^+^ x2      = x1 + x2
-  x1 ^-^ x2      = x1 - x2
-  x1 `dot` x2    = x1 * x2
 
 
 toVertex :: (Component3 c) => c a -> Vertex3 a

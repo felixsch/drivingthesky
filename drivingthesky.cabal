@@ -25,20 +25,21 @@ data-files:          levels/*.lvl
 executable drivingthesky
   main-is:             Main.hs
   other-modules:       Paths_drivingthesky
-                     , FRP.Yampa.GLFW
-                     , State
-                     , Audio
-                     , Road
-                     , Game
-                     , Resource
-                     , Render
-                     , Input
-                     , Ship
-                     , Entity
-                       Util
+                     , DTS
+
+                 --    , State
+                 --    , Audio
+                 --    , Road
+                 --    , Game
+                 --    , Resource
+                 --    , Render
+                 --    , Input
+                 --    , Player
+                 --    , Entity
+                 --      Util
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.8
-                     , Yampa
+                     , netwire
                      , OpenGL
                      , GLUtil
                      , lens
@@ -47,6 +48,7 @@ executable drivingthesky
                      , directory
                      , filepath
                      , mtl
+                     , stm
                      , transformers
                      , vector
 

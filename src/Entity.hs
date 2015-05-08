@@ -3,11 +3,15 @@
 module Entity where
 
 import Control.Lens
-import FRP.Yampa
+
+import Control.Wire.Core
+import FRP.Netwire
+
+import Data.Monoid
+import {-# SOURCE #-} DTS
+
 
 import Util
-import Input
-
 
 
 data Object a = Object { _pos :: Vector3 GLf
@@ -20,11 +24,16 @@ makeLenses ''Object
 
 
 class Entity a where
-    update     :: SF Input (Object a)
+    run     :: (Monoid e, HasTime t s) => Wire s e DTS () (Object a)
+
     canCollide :: a -> Bool
+    canCollide _ = False
+
     aabb       :: Object a -> AABB
-    collide    :: (Entity b) => Object b -> Object a -> Object a
-    collide _ a = a
+
+    collide    :: (Monoid e, HasTime t s, Entity o) => Wire s e DTS (Object o, Object a) (Object a)
+    collide    = mkSF_ $ \(_, a) -> a
+
 
 class Renderable a where
     render :: Object a -> IO ()

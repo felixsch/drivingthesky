@@ -7,8 +7,6 @@ import Control.Lens
 
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLFW
-import FRP.Yampa
-import FRP.Yampa.GLFW
 import Data.Maybe
 
 import Util
@@ -16,7 +14,7 @@ import Block
 import Road
 import Globals
 import State
-import Ship
+import Player
 import Input
 import Entity
 
@@ -27,6 +25,26 @@ import qualified Data.Foldable as F
 drivingthesky :: SF (Event GLFW) Game
 drivingthesky = collectInput >>> playGame
 
+
+-- Running a game until the player is dead. If the player is dead
+-- restart the game
+game :: SF Input Game
+game = switch (runGame >>> (arr id &&& isPlayerDead))
+              (\_ -> restartGame)
+
+-- Generate a Event if the player is marked as dead
+isPlayerDead :: SF Game (Event ())
+isPlayerDead = arr (\game -> game ^. state ^?! player ^. isDead) >>> edge
+
+
+-- set gameOver state and after 2 seconds generate event () to restart the game
+restartGame :: SF Input Game
+restartGame = switch (gameOver &&& after 2 ())
+                     (\_ -> game)
+
+
+runGame :: SF Input Game
+runGame = 
 
 
 

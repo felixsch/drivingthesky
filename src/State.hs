@@ -4,30 +4,19 @@ module State where
 
 import Control.Lens
 
-import Ship
+import Player
 import Util
 import Road
 import Input
 import Entity
-    
-data Game = Game { _input  :: Input 
-                 , _status :: GameStatus
-                 , _state  :: GameState }
-
-data GameStatus = Running
-                | Pause
-                | MainMenu
-                | SelectLevel
-                | Quit
-                deriving (Show, Eq)
-
-data GameState = Playing     { _ship   :: Object Ship
-                             , _road   :: Road
-                             , _speed  :: !GLf }
-               | Paused      {}
-               | Menu        {}
-               | LevelSelect {}
 
 
-makeLenses ''GameState
+data Game = Playing     { _player   :: Object Player
+                        , _road   :: Road
+                        , _speed  :: !GLf }
+          | Paused      {}
+          | Menu        {}
+          | LevelSelect {}
+          deriving (Show)
+
 makeLenses ''Game

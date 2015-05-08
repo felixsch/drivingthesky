@@ -1,9 +1,10 @@
 module Block where
 
-import FRP.Yampa
 
 import Graphics.Rendering.OpenGL
 
+import Control.Wire.Core
+import Data.Monoid
 import Util
 import Entity
 
@@ -37,10 +38,8 @@ isEmptyBlock _            = False
 
 
 
-
 instance Entity Block where
-    update       = arr $ const (Object vNull vNull EmptyBlock)
-    canCollide _ = False
+    run          = mkConst (Left mempty)
     aabb         = blockAABB
 
 instance Renderable Block where
