@@ -3,10 +3,13 @@ module Block where
 
 import Graphics.Rendering.OpenGL
 
+import Control.Monad.IO.Class
 import Control.Wire.Core
 import Data.Monoid
 import Util
 import Entity
+
+import Runtime
 
 type BlockColor  = String
 type BlockHeight = GLf
@@ -39,8 +42,8 @@ isEmptyBlock _            = False
 
 
 instance Entity Block where
-    run          = mkConst (Left mempty)
-    aabb         = blockAABB
+    wire          = mkConst (Left mempty)
+    aabb          = blockAABB
 
 instance Renderable Block where
     render       = blockRender
@@ -58,9 +61,9 @@ blockAABB (Object pos@(Vector3 x y z) _ block) = AABB (toVertex pos)
     maxZ = z - blockHeight
 
 
-blockRender :: Object Block -> IO ()
-blockRender (Object pos _ (Block color height)) = renderBasicBlock pos color height
-blockRender (Object pos _ _                   ) = renderBasicBlock pos "#ffff00" 0.2
+blockRender :: Object Block -> DTS ()
+blockRender (Object pos _ (Block color height)) = liftIO $ renderBasicBlock pos color height
+blockRender (Object pos _ _                   ) = liftIO $renderBasicBlock pos "#ffff00" 0.2
 
 
 renderBasicBlock :: Vector3 GLf -> String -> GLf -> IO ()

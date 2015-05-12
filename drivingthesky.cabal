@@ -25,7 +25,8 @@ data-files:          levels/*.lvl
 executable drivingthesky
   main-is:             Main.hs
   other-modules:       Paths_drivingthesky
-                     , DTS
+                     , Runtime
+                     , Data
 
                  --    , State
                  --    , Audio

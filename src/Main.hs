@@ -9,14 +9,15 @@ import Control.Lens
 import Data.IORef
 
 import Paths_drivingthesky
-import DTS
-import Input
-import Entity
-import Road
-import Util
-import Block
+import Runtime
 
-import Player
+--import Input
+--import Entity
+--import Road
+--import Util
+--import Block
+
+--import Player
 
 
 resize :: Window -> Int -> Int -> IO ()
@@ -65,5 +66,3 @@ main = do
     destroyWindow window
 
     putStrLn "bye!"
-
-

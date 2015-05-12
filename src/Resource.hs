@@ -1,3 +1,20 @@
+module Resource where
+
+import Runtime
+import Data
+
+loadRoad :: String -> Runtime ()
+loadRoad name = do
+  path <- dataPath <$> get
+  def <- liftIO (try $ readFile (path </> "roads" </> name) :: IO (Either IOError String))
+  case def of
+    Left _ -> fatal ("Could not load road (road =" ++ path </> "roads" </> name ++ ")")
+    Right d -> modify (\dat -> dat { loadedRoad = mkRoad $ read d })
+
+{-
+
+
+
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
@@ -19,6 +36,8 @@ module Resource
 
   , initResources
   ) where
+
+
 
 import Control.Monad
 import Control.Applicative
@@ -148,6 +167,8 @@ initResources path = newResources
   , RoadR "level1" (inst "levels/basic.lvl") Nothing
   --, ShaderR "menuVert" VertexShader (inst "data/shader/menu.vert") Nothing
   --, ShaderR "menuFrag" FragmentShader (inst "data/shader/menu.frag") Nothing
-  ]
+ ]
   where
      inst = (</>) path
+-}
+
