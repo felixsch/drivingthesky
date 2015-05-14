@@ -1,8 +1,22 @@
-module Util where
+module Util
+  ( fatal, warn, info
+  , boxIntersect
+  , renderAABB
+  , Component3(..)
+  , _x, _y, _z
+  , toVertex, toVector
+  , vertex3f, vector3f, normal3f
+  , vert3, norm3, col4
+  , color4f_
+  , nullVector
+  , liftIO, io
+  ) where
+
 
 import Control.Applicative
 import Control.Lens
 import Control.Monad.Error ( throwError )
+import Control.Monad.IO.Class
 
 import Graphics.Rendering.OpenGL
 
@@ -12,6 +26,11 @@ import Data.Char (isHexDigit)
 
 import Types
 
+
+-- alias
+
+io :: (MonadIO m) => IO a -> m a
+io = liftIO
 
 -- Simple error handling
 
@@ -140,6 +159,9 @@ _z inj comp = setC3 comp <$> inj (viewC3 comp)
 
 toVertex :: (Component3 c) => c a -> Vertex3 a
 toVertex x = Vertex3 (x ^. _x) (x ^. _y) (x ^. _z)
+
+toVector :: (Component3 c) => c a -> Vector3 a
+toVector x = Vector3 (x ^. _x) (x ^. _y) (x ^. _z)
 
 vertex3f :: GLf -> GLf -> GLf -> Vertex3 GLf
 vertex3f = Vertex3

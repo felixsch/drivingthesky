@@ -20,10 +20,10 @@ blockHeight :: GLf
 blockHeight = 2.0
 
 blockGetHeight :: Block -> GLf
-blockGetHeight (Start _ h)  = h
-blockGetHeight (Block _ h)  = h
+blockGetHeight (Start _ h _)  = h
+blockGetHeight (Block _ h _)  = h
 blockGetHeight (EmptyBlock) = 0.0
-blockGetHeight (Goal _ h)   = h
+blockGetHeight (Goal _ h _)   = h
 
 
 instance Entity Block where
@@ -45,9 +45,25 @@ aabbBlock (Object pos@(Vector3 x y z) _ block) = AABB (toVertex pos)
     maxZ = z - blockHeight
 
 
+renderType :: Block -> BlockRenderType
+renderTYpe 
+
 renderBlock :: Object Block -> Runtime ()
+renderBlock (Object _   _ (EmptyBlock) ) = return ()
+renderBlock (Object pos _ (Block c h t)) = simpleRender pos c h t
+renderBlock (Object pos _ _            ) = simpleRender pos "#ffff00" 0.2 BlockRenderNormal
+
+simpleRender :: Vector3 GLf -> String -> GLf -> BlockRenderType -> Runtime ()
+simpleRender p c h t = do
+  
+
+
+
+
+
+{-renderBlock :: Object Block -> Runtime ()
 renderBlock (Object pos _ (Block color height)) = renderBasicBlock pos color height
-renderBlock (Object pos _ _                   ) = renderBasicBlock pos "#ffff00" 0.2
+renderBlock (Object pos _ _                   ) = renderBasicBlock pos "#ffff00" 0.2 -}
 
 
 renderBasicBlock :: Vector3 GLf -> String -> GLf -> Runtime ()

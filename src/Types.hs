@@ -2,7 +2,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE ExistentialQuantification #-}
 
 module Types
   ( GLf
@@ -41,8 +40,6 @@ module Types
 
   -- OpenGL
   , GL.Vector3, GL.Vertex3
-
-  , liftIO
  
   ) where
 
@@ -104,12 +101,15 @@ type BlockColor  = String
 type BlockHeight = GLf
 type BlockAlpha  = GLf
 
+data BlockRenderType = BlockRenderNormal
+  deriving (Eq, Show, Read)
 
-data Block  = Start BlockColor BlockHeight
-            | Block BlockColor BlockHeight
+data Block  = Start BlockColor BlockHeight BlockRenderType
+            | Block BlockColor BlockHeight BlockRenderType
             | EmptyBlock
-            | Goal BlockColor BlockHeight
+            | Goal BlockColor BlockHeight BlockRenderType
             deriving (Show, Read, Eq)
+
 
 -- Road
 

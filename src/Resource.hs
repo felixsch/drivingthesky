@@ -1,6 +1,8 @@
 module Resource
   ( loadRoad
+
   , loadShader
+  , getShader
   ) where
 
 import Control.Lens
@@ -31,4 +33,8 @@ loadShader name = do
   case shader of
     Left e -> fatal ("Could not load shader: " ++ show e)
     Right program -> shaders . at name ?= program
+
+
+getShader :: String -> Runtime (Maybe ShaderProgram)
+getShader name = use $ shaders . at name
 
