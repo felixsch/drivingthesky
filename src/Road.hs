@@ -1,43 +1,24 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Road where
 
 import Control.Applicative
 import Control.Lens
+
+import Types
+import Util
+import Block
+
+import Graphics.Rendering.OpenGL
 
 import qualified Data.Map as M
 import qualified Data.Sequence as S
 import qualified Data.Foldable as F
 import qualified Data.List as L
 
-
-import Util
-import Block
-import Entity
-
-
 blocksPerLine :: GLf
 blocksPerLine = 7
 
 roadStartX :: GLf
 roadStartX = -((blocksPerLine * blockWidth) / 2)
-
-
-
-data RoadDefinition = RoadDefinition { roadName   :: String
-                                     , roadBlocks :: M.Map Int Block
-                                     , roadDef    :: S.Seq [Int] }
-    deriving (Show, Read, Eq)
-
-data Road = Road { _blocks     :: S.Seq [Object Block]
-                 , _definition :: RoadDefinition }
-                 deriving (Show)
-
-makeLenses ''Road
-
-
-
-loadRoadDefinition :: FilePath -> IO RoadDefinition
-loadRoadDefinition path = read <$> readFile path
 
 
 mkRoad :: RoadDefinition -> Maybe Road
@@ -57,7 +38,7 @@ buildBlockRows def (x S.:< xs) i  = (S.<|) <$> buildRow def x 0 i <*> buildBlock
     buildRow def (x:xs) j i = (++) <$> buildRow def xs (j+1) i <*> (buildBlockObject def i j x) 
 
 buildBlockObject :: RoadDefinition -> Int -> Int -> Int -> Maybe [Object Block]
-buildBlockObject def i j typ = Just $ maybe [] (\x -> [Object pos vNull x]) $ getBlockType def typ
+buildBlockObject def i j typ = Just $ maybe [] (\x -> [Object pos nullVector x]) $ getBlockType def typ
   where
     pos = Vector3 x 0.0 z
     x   = roadStartX + (fromIntegral j * blockWidth)
@@ -69,7 +50,7 @@ getBlockType def i = filterEmpty =<< M.lookup i (roadBlocks def)
       filterEmpty EmptyBlock   = Nothing
       filterEmpty x            = Just x
 
-renderRoad :: Int -> Road -> IO ()
+renderRoad :: Int -> Road -> Runtime ()
 renderRoad i road = mapM_ render' $ F.foldl (++) [] subset
   where
     subset = S.drop i (road ^. blocks)
@@ -78,14 +59,6 @@ renderRoad i road = mapM_ render' $ F.foldl (++) [] subset
 
 intersectingBlocks :: AABB -> S.Seq [Object Block] -> [Object Block]
 intersectingBlocks ship = filter (boxIntersect ship . aabb ) . F.foldr (++) []
-
-
-
-
-
-
-
-
 {-
 
 getBlockAt :: Road -> Vector3 GLf -> Maybe (AABB, Block)

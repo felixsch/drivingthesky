@@ -9,7 +9,12 @@ import Control.Lens
 import Data.IORef
 
 import Paths_drivingthesky
-import Runtime
+import Types
+import Util
+import Resource
+import Block
+import Road
+--import Runtime
 
 --import Input
 --import Entity

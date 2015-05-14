@@ -1,53 +1,31 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
-
-module Util
-  ( whenM
-  , GLf
-  , Alpha
-  , toGLf
-  , fromGLf
-  , vertex3f
-  , vector3f
-  , normal3f
-  , Vertex3(..)
-  , Vector3(..)
-  , Normal3(..)
-  , Color4(..)
-  , color4f
-  , color4f_
-  , vert3
-  , norm3
-  , col4
-
-  , AABB(..)
-  , boxIntersect
-  , renderAABB
-
-  , Component3(..)
-  , toVertex
-
-  , _x
-  , _y
-  , _z
-
-  , abZero
-  , vNull
-
-  ) where
+module Util where
 
 import Control.Applicative
 import Control.Lens
+import Control.Monad.Error ( throwError )
 
 import Graphics.Rendering.OpenGL
+
 import Unsafe.Coerce
 import Numeric (readHex)
 import Data.Char (isHexDigit)
 
+import Types
 
-data AABB = AABB { pMin :: Vertex3 GLf
-                 , pMax :: Vertex3 GLf }
-        deriving (Show)
 
+-- Simple error handling
+
+fatal :: String -> Runtime a
+fatal = throwError . Fatal
+
+warn :: String -> Runtime a
+warn = throwError . Warning
+
+info :: String -> Runtime a
+info = throwError . Info
+
+
+-- AABB
 boxIntersect :: AABB -> AABB -> Bool
 boxIntersect (AABB aMin aMax) (AABB bMin bMax) =
     aMax ^. _x > bMin ^. _x &&
@@ -59,8 +37,8 @@ boxIntersect (AABB aMin aMax) (AABB bMin bMax) =
     aMax ^. _z < bMin ^. _z &&
     aMin ^. _z > bMax ^. _z
 
-renderAABB :: String -> AABB -> IO ()
-renderAABB c (AABB p1 p2) = do
+renderAABB :: String -> AABB -> Runtime ()
+renderAABB c (AABB p1 p2) = liftIO $ do
     color $ color4f_ c
     renderPrimitive Lines $ do
 
@@ -112,8 +90,7 @@ renderAABB c (AABB p1 p2) = do
       p2z = p2 ^. _z
 
 
-
-
+-- Vector Vertex lens integration
 class Component3 c where
   viewC1 :: c a -> a
   viewC2 :: c a -> a
@@ -159,28 +136,7 @@ _y inj comp = setC2 comp <$> inj (viewC2 comp)
 _z :: (Component3 c) => Lens (c a) (c a) a a
 _z inj comp = setC3 comp <$> inj (viewC3 comp)
 
-whenM :: (Monad m) => m (Maybe a) -> (a -> m ()) -> m ()
-whenM s f = maybe (return ()) f =<< s
-
-
-abZero :: GLf -> GLf
-abZero x
-  | x > 0.0   = x
-  | otherwise = 0.0
-
-vNull :: Vector3 GLf
-vNull = Vector3 0.0 0.0 0.0
-
-
-type GLf = GLfloat
-type Alpha = GLf
-
-toGLf :: a -> GLf
-toGLf = unsafeCoerce
-
-fromGLf :: GLf -> a
-fromGLf = unsafeCoerce
-
+-- rendering basics
 
 toVertex :: (Component3 c) => c a -> Vertex3 a
 toVertex x = Vertex3 (x ^. _x) (x ^. _y) (x ^. _z)
@@ -218,4 +174,8 @@ color4f_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
   | otherwise               = Color4 0.45 1.2 0.2 1.0
   where hexify = fst . head . readHex
 color4f_ _              = Color4 0.45 1.2 0.2 1.0
+
+
+nullVector :: Vector3 GLf
+nullVector = Vector3 0.0 0.0 0.0
 
