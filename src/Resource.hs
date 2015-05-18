@@ -1,7 +1,5 @@
 module Resource
-  ( loadRoad
-
-  , loadShader
+  ( loadShader
   , getShader
   ) where
 
@@ -14,17 +12,7 @@ import Control.Exception
 import Graphics.GLUtil.ShaderProgram
 
 import Types
-import Road
 import Util
-
-loadRoad :: String -> Runtime ()
-loadRoad name = do
-  path <- view runtimePath <$> get
-  def <- liftIO (try $ readFile (path </> "roads" </> name) :: IO (Either IOError String))
-  case def of
-    Left _ -> fatal ("Could not load road (road =" ++ path </> "roads" </> name ++ ")")
-    Right d -> currentRoad .= (mkRoad $ read d)
-
 
 loadShader :: String -> Runtime ()
 loadShader name = do

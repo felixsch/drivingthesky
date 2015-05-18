@@ -59,6 +59,15 @@ renderRoad i road = mapM_ render' $ F.foldl (++) [] subset
 
 intersectingBlocks :: AABB -> S.Seq [Object Block] -> [Object Block]
 intersectingBlocks ship = filter (boxIntersect ship . aabb ) . F.foldr (++) []
+
+
+loadRoad :: String -> Runtime ()
+loadRoad name = do
+  path <- view runtimePath <$> get
+  def <- liftIO (try $ readFile (path </> "roads" </> name) :: IO (Either IOError String))
+  case def of
+    Left _ -> fatal ("Could not load road (road =" ++ path </> "roads" </> name ++ ")")
+    Right d -> currentRoad .= (mkRoad $ read d)
 {-
 
 getBlockAt :: Road -> Vector3 GLf -> Maybe (AABB, Block)

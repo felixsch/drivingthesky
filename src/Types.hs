@@ -26,6 +26,7 @@ module Types
 
   -- Block
   , Block(..)
+  , BlockRenderType(..)
   , BlockColor
   , BlockHeight
   , BlockAlpha
@@ -76,6 +77,8 @@ import qualified Data.Sequence as S
 import qualified Data.Foldable as F
 import qualified Data.List as L
 
+import Linear.Matrix
+
 -- Basic Types
 
 type GLf = GL.GLfloat
@@ -102,6 +105,7 @@ type BlockHeight = GLf
 type BlockAlpha  = GLf
 
 data BlockRenderType = BlockRenderNormal
+                     | BlockRenderWire
   deriving (Eq, Show, Read)
 
 data Block  = Start BlockColor BlockHeight BlockRenderType
@@ -168,12 +172,13 @@ run r (Runtime f) = runErrorT $ runReaderT f r
 
 
 class Entity a where
-    wire :: (Monoid e) => Wire s e Runtime () (Object a)
-    aabb :: Object a -> AABB
+    wire       :: (Monoid e) => Wire s e Runtime () (Object a)
+    aabb       :: Object a -> AABB
     canCollide :: Wire s e Runtime (Object a) Bool
     canCollide = mkConst (Right False)
-    collide :: Wire s e Runtime (Object b, Object a) (Object a)
+    collide    :: Wire s e Runtime (Object b, Object a) (Object a)
+
 
 -- Renderable
 class Renderable a where
-    render :: Object a -> Runtime () 
+  render  :: M44 GLf -> Object a -> Runtime ()
