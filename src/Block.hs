@@ -21,11 +21,24 @@ import Types
 import Util
 
 
+defaultBlockLength :: GLf
+defaultBlockLength = 1.0
+
 defaultBlockWidth :: GLf
-defaultBlockWidth = 0.8
+defaultBlockWidth = 4.0
 
 defaultBlockHeight :: GLf
 defaultBlockHeight = 2.0
+
+
+blockVertices :: [V3 GLf]
+blockVertices = V3 <$> [l, -l] <*> [h, -h] <*> [w, -w]
+  where
+    l = defaultBlockLength / 2.0
+    w = defaultBlockWidth / 2.0
+    h = defaultBlockHeight / 2.0
+
+
 
 blockHeight :: Block -> GLf
 blockHeight (Start _ h _)  = h
@@ -45,13 +58,13 @@ blockType (Block _ _ t)  = t
 blockType (Goal  _ _ t)  = t
 blockType (EmptyBlock )  = BlockRenderWire
 
+blockVertices :: [V3 GLf]
+blockVertices = 
+
 instance Entity Block where
    wire    = mkConst (Left mempty)
    collide = mkSF_ snd
    aabb    = aabbBlock
-
-instance Renderable Block where
-  render = renderBlock
 
 
 aabbBlock :: Object Block -> AABB
@@ -64,17 +77,26 @@ aabbBlock (Object pos@(Vector3 x y z) _ block) = AABB (toVertex pos)
     maxZ = z - defaultBlockHeight
 
 
+{-
 getBlockShader :: BlockRenderType -> Runtime ShaderProgram
 getBlockShader t = fromMaybeM (fatal $ msg ++ show t) =<< (getShader $ show t)
   where
     msg = "Could not compile block shader. type = " 
     fromMaybeM f Nothing  = f
-    fromMaybeM _ (Just a) = return a
+    fromMaybeM _ (Just a) = return a -}
 
-renderBlock :: M44 GLf -> Object Block -> Runtime ()
-renderBlock vp (Object pos _ EmptyBlock) = return ()
-renderBlock vp (Object pos _ block)      = do
-   shader <- getBlockShader (blockType block)
+
+renderBlock :: GLsizei -> M44 GLf -> ShaderProgram -> Object Block -> Runtime ()
+renderBlock i vp _  (Object _ _ EmptyBlock) = return ()
+renderBlock i vp prg (Object pos vel block) = io $ do
+  asUniform mvp $ getUniform prg "mvp"
+  asUniform color $ getUniform prg "color"
+  drawIndexedTris i
+ where
+   mvp = vp
+   color = color4f_ $ blockColor block
+
+{-
    io $ do
      objVertices <- fromSource ArrayBuffer vertices
      objColors   <- fromSource ArrayBuffer colors
@@ -127,7 +149,6 @@ renderBlock vp (Object pos _ block)      = do
                , V3 5 7 6 -- right
                , V3 6 4 5 ]
                
-{-
 p0 V3 b h z
 p1 V3 b h (-z)
 p2 V3 b (-h) z

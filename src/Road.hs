@@ -2,12 +2,19 @@ module Road where
 
 import Control.Applicative
 import Control.Lens
+import Control.Exception
+
+import System.FilePath.Posix
+
+import Linear
 
 import Types
+import Resource
 import Util
 import Block
 
 import Graphics.Rendering.OpenGL
+import Graphics.GLUtil
 
 import qualified Data.Map as M
 import qualified Data.Sequence as S
@@ -18,8 +25,38 @@ blocksPerLine :: GLf
 blocksPerLine = 7
 
 roadStartX :: GLf
-roadStartX = -((blocksPerLine * blockWidth) / 2)
+roadStartX = -((blocksPerLine * defaultBlockWidth) / 2)
 
+
+renderRoad :: Int -> M44 GLf -> Road -> Runtime ()
+renderRoad start vp road = do
+
+    shader <- getShader "block"
+    io $ do
+      bufVertices <- fromSource ArrayBuffer blockVertices
+      bufNormals  <- fromSource ArrayBuffer blockNormals
+      bufIndicies <- fromSource ElementArrayBuffer blockIndices
+
+      currentProgram $= (Just $ program $ shader)
+    
+      enableAttrib shader "v_coord"
+      enableAttrib shader "v_normal"
+
+      bindBuffer ArrayBuffer $= Just bufVertices
+      setAttrib shader "v_coord"
+        ToFloat $ VertexArrayDescriptor 3 Float 0 offset0
+
+      bindBuffer ArrayBuffer $= Just bufNormals
+      setAttrib shader "n_normal"
+        ToFloat $ VertexArrayDescriptor 3 Float 0 offset0
+
+      bindBuffer ElementArrayBuffer $= Just bufIndicies
+
+
+    mapM_ (renderBlock count vp shader) $ F.foldl (++) [] subset
+  where
+    subset = S.drop start (road ^. blocks)
+    count  = fromIntegral $ length blockIndices
 
 mkRoad :: RoadDefinition -> Maybe Road
 mkRoad def = do
@@ -41,8 +78,8 @@ buildBlockObject :: RoadDefinition -> Int -> Int -> Int -> Maybe [Object Block]
 buildBlockObject def i j typ = Just $ maybe [] (\x -> [Object pos nullVector x]) $ getBlockType def typ
   where
     pos = Vector3 x 0.0 z
-    x   = roadStartX + (fromIntegral j * blockWidth)
-    z   = - (fromIntegral i * blockHeight)
+    x   = roadStartX + (fromIntegral j * defaultBlockWidth)
+    z   = - (fromIntegral i * defaultBlockHeight)
 
 getBlockType :: RoadDefinition -> Int -> Maybe Block
 getBlockType def i = filterEmpty =<< M.lookup i (roadBlocks def)
@@ -50,12 +87,13 @@ getBlockType def i = filterEmpty =<< M.lookup i (roadBlocks def)
       filterEmpty EmptyBlock   = Nothing
       filterEmpty x            = Just x
 
-renderRoad :: Int -> Road -> Runtime ()
-renderRoad i road = mapM_ render' $ F.foldl (++) [] subset
+{-
+renderRoad :: M44 GLf -> Int -> Road -> Runtime ()
+renderRoad mvp i road = mapM_ render' $ F.foldl (++) [] subset
   where
     subset = S.drop i (road ^. blocks)
-    render' obj = render obj >> renderAABB "#fafaff" (aabb obj)
-    
+    render' obj = render mvp obj >> renderAABB "#fafaff" (aabb obj)
+-}   
 
 intersectingBlocks :: AABB -> S.Seq [Object Block] -> [Object Block]
 intersectingBlocks ship = filter (boxIntersect ship . aabb ) . F.foldr (++) []
@@ -63,7 +101,7 @@ intersectingBlocks ship = filter (boxIntersect ship . aabb ) . F.foldr (++) []
 
 loadRoad :: String -> Runtime ()
 loadRoad name = do
-  path <- view runtimePath <$> get
+  path <- use runtimePath
   def <- liftIO (try $ readFile (path </> "roads" </> name) :: IO (Either IOError String))
   case def of
     Left _ -> fatal ("Could not load road (road =" ++ path </> "roads" </> name ++ ")")
@@ -110,11 +148,11 @@ testRoadDefinition = RoadDefinition
   { roadName = "Test Level"
   , roadBlocks = M.fromList 
     [ (0, EmptyBlock)
-    , (1, Block "#2288FF" 0.2)
-    , (2, Block "#11447F" 0.2)
-    , (3, Block "#ff0000" 0.5)
-    , (4, Start "#ffff00" 0.2)
-    , (5, Goal  "#ff0000" 0.2) ]
+    , (1, Block "#2288FF" 0.2 BlockRenderNormal)
+    , (2, Block "#11447F" 0.2 BlockRenderNormal)
+    , (3, Block "#ff0000" 0.5 BlockRenderNormal)
+    , (4, Start "#ffff00" 0.2 BlockRenderNormal)
+    , (5, Goal  "#ff0000" 0.2 BlockRenderNormal) ]
   , roadDef = S.fromList
     [ [1,0,0,4,0,0,1]
     , [0,0,0,1,0,0,0]

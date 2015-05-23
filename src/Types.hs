@@ -179,6 +179,20 @@ class Entity a where
     collide    :: Wire s e Runtime (Object b, Object a) (Object a)
 
 
+
+
+
+
 -- Renderable
+
+{-
+  initRoad --> renderRoad 
+  renderPlayer
+  renderSky
+  -- renderObjects
+  renderFog
+-}
+
+
 class Renderable a where
-  render  :: M44 GLf -> Object a -> Runtime ()
+  render  :: Object a -> Runtime ()

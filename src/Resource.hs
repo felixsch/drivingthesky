@@ -5,7 +5,7 @@ module Resource
 
 import Control.Lens
 import Control.Applicative
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 import System.FilePath.Posix ((</>))
 import Control.Exception
 
@@ -13,6 +13,11 @@ import Graphics.GLUtil.ShaderProgram
 
 import Types
 import Util
+
+
+fromMaybeM :: (MonadIO m) => m a -> Maybe a -> m a
+fromMaybeM _ (Just a) = return a
+fromMaybeM f _        = f
 
 loadShader :: String -> Runtime ()
 loadShader name = do
@@ -23,6 +28,11 @@ loadShader name = do
     Right program -> shaders . at name ?= program
 
 
-getShader :: String -> Runtime (Maybe ShaderProgram)
-getShader name = use $ shaders . at name
+getShader :: String -> Runtime ShaderProgram
+getShader name = fromMaybeM failed =<< shader
+  where
+    failed = fatal $ "Could not get shader " ++ name ++ ": No such file."
+    shader = use $ shaders . at name
+
+
 
