@@ -30,6 +30,7 @@ executable drivingthesky
                      , Resource
                      , Road
                      , Block
+                     , Player
                      
 
 

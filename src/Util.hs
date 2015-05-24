@@ -2,8 +2,6 @@ module Util
   ( fatal, warn, info
   , boxIntersect
   , renderAABB
-  , Component3(..)
-  , _x, _y, _z
   , toVertex, toVector
   , vertex3f, vector3f, normal3f
   , vert3, norm3, col4
@@ -24,6 +22,7 @@ import Unsafe.Coerce
 import Numeric (readHex)
 import Data.Char (isHexDigit)
 
+import Linear
 import Types
 
 
@@ -108,59 +107,12 @@ renderAABB c (AABB p1 p2) = liftIO $ do
       p1z = p1 ^. _z
       p2z = p2 ^. _z
 
-
--- Vector Vertex lens integration
-class Component3 c where
-  viewC1 :: c a -> a
-  viewC2 :: c a -> a
-  viewC3 :: c a -> a
-  setC1 :: c a -> a -> c a
-  setC2 :: c a -> a -> c a
-  setC3 :: c a -> a -> c a
-
-
-instance Component3 Vertex3 where
-  viewC1 (Vertex3 c1 _ _) = c1
-  viewC2 (Vertex3 _ c2 _) = c2
-  viewC3 (Vertex3 _ _ c3) = c3
-
-  setC1 (Vertex3 _ c2 c3) c1 = Vertex3 c1 c2 c3
-  setC2 (Vertex3 c1 _ c3) c2 = Vertex3 c1 c2 c3
-  setC3 (Vertex3 c1 c2 _) c3 = Vertex3 c1 c2 c3
-
-instance Component3 Vector3 where
-  viewC1 (Vector3 c1 _ _) = c1
-  viewC2 (Vector3 _ c2 _) = c2
-  viewC3 (Vector3 _ _ c3) = c3
-
-  setC1 (Vector3 _ c2 c3) c1 = Vector3 c1 c2 c3
-  setC2 (Vector3 c1 _ c3) c2 = Vector3 c1 c2 c3
-  setC3 (Vector3 c1 c2 _) c3 = Vector3 c1 c2 c3
-
-instance Component3 Normal3 where
-  viewC1 (Normal3 c1 _ _) = c1
-  viewC2 (Normal3 _ c2 _) = c2
-  viewC3 (Normal3 _ _ c3) = c3
-
-  setC1 (Normal3 _ c2 c3) c1 = Normal3 c1 c2 c3
-  setC2 (Normal3 c1 _ c3) c2 = Normal3 c1 c2 c3
-  setC3 (Normal3 c1 c2 _) c3 = Normal3 c1 c2 c3
-
-_x :: (Component3 c) => Lens (c a) (c a) a a
-_x inj comp = setC1 comp <$> inj (viewC1 comp)
-
-_y :: (Component3 c) => Lens (c a) (c a) a a
-_y inj comp = setC2 comp <$> inj (viewC2 comp)
-
-_z :: (Component3 c) => Lens (c a) (c a) a a
-_z inj comp = setC3 comp <$> inj (viewC3 comp)
-
 -- rendering basics
 
-toVertex :: (Component3 c) => c a -> Vertex3 a
+toVertex :: (R3 c) => c a -> Vertex3 a
 toVertex x = Vertex3 (x ^. _x) (x ^. _y) (x ^. _z)
 
-toVector :: (Component3 c) => c a -> Vector3 a
+toVector :: (R3 c) => c a -> Vector3 a
 toVector x = Vector3 (x ^. _x) (x ^. _y) (x ^. _z)
 
 vertex3f :: GLf -> GLf -> GLf -> Vertex3 GLf
@@ -198,6 +150,6 @@ color4f_ s@['#', r1, r2, g1, g2, b1, b2, a1, a2]
 color4f_ _              = Color4 0.45 1.2 0.2 1.0
 
 
-nullVector :: Vector3 GLf
-nullVector = Vector3 0.0 0.0 0.0
+nullVector :: V3 GLf
+nullVector = V3 0.0 0.0 0.0
 

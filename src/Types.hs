@@ -15,6 +15,14 @@ module Types
   , run
   , get, put, modify
 
+  -- Player
+  , Player(..)
+  , playerStatus, playerSpeed
+
+  -- GameState
+  , GameState(..)
+  , status, menu, player, road
+
   -- RuntimeData
   , Data(..)
   , glfwWindow, runtimePath, shaders, currentRoad
@@ -43,7 +51,6 @@ module Types
   , GL.Vector3, GL.Vertex3
  
   ) where
-
 
 
 import Control.Lens
@@ -77,14 +84,14 @@ import qualified Data.Sequence as S
 import qualified Data.Foldable as F
 import qualified Data.List as L
 
-import Linear.Matrix
+import Linear
 
 -- Basic Types
 
 type GLf = GL.GLfloat
 
-data AABB = AABB { pMin :: GL.Vertex3 GLf
-                 , pMax :: GL.Vertex3 GLf }
+data AABB = AABB { pMin :: V3 GLf
+                 , pMax :: V3 GLf }
         deriving (Show)
 
 type Alpha = GLf
@@ -93,8 +100,8 @@ type Alpha = GLf
 -- Object & Entity
 
 
-data Object a = Object { _position :: GL.Vector3 GLf
-                                     , _velocity :: GL.Vector3 GLf
+data Object a = Object { _position :: V3 GLf
+                                     , _velocity :: V3 GLf
                                      , _object   :: a }
 
 makeLenses ''Object
@@ -127,7 +134,11 @@ data Road = Road { _blocks     :: S.Seq [Object Block]
                  , _definition :: RoadDefinition }
 
 makeLenses ''Road
+
+
 -- RuntimeData
+
+type Ref = TVar Data
 
 data Data = Data { _glfwWindow  :: GLFW.Window
                  , _currentRoad :: Maybe Road
@@ -137,6 +148,39 @@ makeLenses ''Data
 
 mkRuntimeData :: GLFW.Window -> FilePath -> IO Ref
 mkRuntimeData win path = newTVarIO $ Data win Nothing path M.empty
+
+-- Player
+
+data PlayerStatus = PlayerAlive
+                  | PlayerDead
+
+data Player = Player 
+  { _playerSpeed   :: GLf
+  , _playerStatus  :: PlayerStatus
+  }
+
+makeLenses ''Player
+
+
+-- Menu
+data Menu = MainMenu Int 
+          | PausedMenu Int
+
+
+-- GameState
+
+data GameStatus = GameMainMenu
+                | GameRunning
+                | GamePaused
+                | GameTransition Bool
+
+data GameState = GameState
+  { _status :: GameStatus
+  , _player :: Maybe Player
+  , _menu   :: Maybe Menu
+  , _road   :: String }
+
+makeLenses ''GameState
 
 
 -- Runtime 
@@ -148,7 +192,6 @@ data RuntimeError = Fatal String
 instance Error RuntimeError where
   strMsg = Info
 
-type Ref = TVar Data
 
 newtype Runtime a = Runtime { runRuntime :: ReaderT Ref (ErrorT RuntimeError IO) a}
   deriving (Functor, Monad, MonadIO, MonadReader Ref, MonadError RuntimeError)
@@ -177,22 +220,6 @@ class Entity a where
     canCollide :: Wire s e Runtime (Object a) Bool
     canCollide = mkConst (Right False)
     collide    :: Wire s e Runtime (Object b, Object a) (Object a)
-
-
-
-
-
-
--- Renderable
-
-{-
-  initRoad --> renderRoad 
-  renderPlayer
-  renderSky
-  -- renderObjects
-  renderFog
--}
-
 
 class Renderable a where
   render  :: Object a -> Runtime ()
